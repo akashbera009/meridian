@@ -586,19 +586,35 @@ function wireSettings() {
     if (e.key === 'Escape') $('#modal').classList.add('hidden');
   });
 
-  $('#btn-save-gh').onclick = () => {
+  /** Persist whatever is currently typed in the form. Returns false and
+   *  says what's missing rather than letting a later call fail vaguely. */
+  function saveGh({ quiet = false } = {}) {
+    const owner = $('#gh-owner').value.trim();
+    const repo  = $('#gh-repo').value.trim();
+    const token = $('#gh-token').value.trim();
+    const missing = [
+      !owner && 'owner', !repo && 'repo', !token && 'token',
+    ].filter(Boolean);
+    if (missing.length) { toast('fill in: ' + missing.join(', '), true); return false; }
+
     localStorage.setItem(LS_GH, JSON.stringify({
-      owner:  $('#gh-owner').value.trim(),
-      repo:   $('#gh-repo').value.trim(),
+      owner, repo,
       branch: $('#gh-branch').value.trim() || 'main',
       path:   $('#gh-path').value.trim() || DEFAULT_PATH,
     }));
-    localStorage.setItem(LS_TOKEN, $('#gh-token').value.trim());
-    setSync('ok'); toast('saved — try "pull remote"');
+    localStorage.setItem(LS_TOKEN, token);
+    setSync('ok');
+    if (!quiet) toast('saved — try "pull remote"');
+    return true;
+  }
+
+  $('#btn-save-gh').onclick = () => saveGh();
+  // pull/push save the form first, so a filled-in but unsaved form just works
+  $('#btn-pull').onclick = () => { if (saveGh({ quiet: true })) pull(); };
+  $('#btn-push').onclick = () => {
+    if (!saveGh({ quiet: true })) return;
+    push().then(ok => { if (ok) toast('pushed to ' + ghCfg().path); });
   };
-  $('#btn-pull').onclick = () => pull();
-  // only claim success if the request actually succeeded
-  $('#btn-push').onclick = () => push().then(ok => { if (ok) toast('pushed to ' + ghCfg().path); });
 
   $('#btn-export').onclick = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
