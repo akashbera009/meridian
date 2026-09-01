@@ -514,13 +514,13 @@ async function pull({ quiet = false } = {}) {
   try {
     setSync('…');
     const f = await ghFetch('GET');
-    if (!f) { setSync('new'); return quiet || toast('no remote file yet — push to create it'); }
+    if (!f) { setSync('new'); return quiet || toast('no file at ' + (ghCfg().path || DEFAULT_PATH) + ' — push to create it'); }
     const remote = JSON.parse(b64dec(f.content));
     state = merge(state, remote);
     saveState({ sync: false });
     render(); setSync('ok');
     if (!quiet) toast('pulled + merged');
-  } catch (e) { setSync('err'); toast('pull failed: ' + e.message, true); }
+  } catch (e) { setSync('err'); toast(explain(e), true); }
 }
 
 async function push() {
@@ -539,7 +539,22 @@ async function push() {
     });
     saveState({ sync: false });
     setSync('ok');
-  } catch (e) { setSync('err'); toast('push failed: ' + e.message, true); }
+    return true;
+  } catch (e) {
+    setSync('err');
+    toast(explain(e), true);
+    return false;
+  }
+}
+
+/** Turn a raw API error into something actionable. */
+function explain(e) {
+  const m = String(e.message || e);
+  if (m.startsWith('401')) return 'token rejected — expired, or from the wrong GitHub account';
+  if (m.startsWith('403')) return 'token lacks permission — needs Contents: Read and write on this repo';
+  if (m.startsWith('404')) return 'not found — check owner/repo, and that path starts with docs/';
+  if (m.startsWith('409') || m.startsWith('422')) return 'conflict — pull remote first, then push';
+  return 'sync failed: ' + m.slice(0, 120);
 }
 
 function schedulePush() {
@@ -582,7 +597,8 @@ function wireSettings() {
     setSync('ok'); toast('saved — try "pull remote"');
   };
   $('#btn-pull').onclick = () => pull();
-  $('#btn-push').onclick = () => push().then(() => toast('pushed'));
+  // only claim success if the request actually succeeded
+  $('#btn-push').onclick = () => push().then(ok => { if (ok) toast('pushed to ' + ghCfg().path); });
 
   $('#btn-export').onclick = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
