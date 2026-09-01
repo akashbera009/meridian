@@ -470,6 +470,13 @@ function renderHud() {
 
 /* ── github sync ───────────────────────────────────────────────────── */
 
+/** Repo path of the progress file. The site is served FROM docs/, so the
+ *  browser sees /data/progress.json while the API must write the repo
+ *  path — docs/data/progress.json. Derived from the URL so it stays right
+ *  whether Pages serves /docs or the repo root. */
+const DEFAULT_PATH = location.hostname.endsWith('github.io')
+  ? 'docs/data/progress.json' : 'data/progress.json';
+
 const ghCfg = () => { try { return JSON.parse(localStorage.getItem(LS_GH)) || {}; } catch { return {}; } };
 const ghToken = () => localStorage.getItem(LS_TOKEN) || '';
 const ghReady = () => { const c = ghCfg(); return !!(c.owner && c.repo && ghToken()); };
@@ -485,7 +492,7 @@ const b64dec = b64 => {
 
 async function ghFetch(method, body) {
   const c = ghCfg();
-  const path = c.path || 'data/progress.json';
+  const path = c.path || DEFAULT_PATH;
   const url = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${path}`
             + (method === 'GET' ? `?ref=${c.branch || 'main'}` : '');
   const res = await fetch(url, {
@@ -551,7 +558,7 @@ function openSettings() {
   $('#gh-owner').value  = c.owner  || '';
   $('#gh-repo').value   = c.repo   || slug();
   $('#gh-branch').value = c.branch || 'main';
-  $('#gh-path').value   = c.path   || 'data/progress.json';
+  $('#gh-path').value   = c.path   || DEFAULT_PATH;
   $('#gh-token').value  = ghToken();
   $('#modal').classList.remove('hidden');
 }
@@ -569,7 +576,7 @@ function wireSettings() {
       owner:  $('#gh-owner').value.trim(),
       repo:   $('#gh-repo').value.trim(),
       branch: $('#gh-branch').value.trim() || 'main',
-      path:   $('#gh-path').value.trim() || 'data/progress.json',
+      path:   $('#gh-path').value.trim() || DEFAULT_PATH,
     }));
     localStorage.setItem(LS_TOKEN, $('#gh-token').value.trim());
     setSync('ok'); toast('saved — try "pull remote"');
