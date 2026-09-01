@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "MERIDIAN",
+    "subtitle": "field manual · vol. i",
+    "owner": "you",
+    "startDate": "2026-09-01",
+    "endDate": "2027-04-04",
+    "weeklyTargetHours": 14,
+    "weekdayHours": 2,
+    "weekendHours": 4.5,
+    "target": "10-14 LPA · product co / funded startup / GCC · Bangalore, Hyderabad, Pune, NCR or remote",
+    "priorStack": [
+      "React Native",
+      "Django",
+      "DRF",
+      "Python",
+      "REST",
+      "HuggingFace",
+      "FastAPI (basic)"
+    ],
+    "budget": "free tier only",
+    "note": "Every resource here is free. No paid course is required to complete this track."
+  },
+  "principles": [
+    "Evals are the differentiator. 'Accuracy went 61% -> 84% after reranking' beats every certificate.",
+    "When an AI feature feels dumb it is almost always the retriever, not the model.",
+    "Ship one AI feature at your current job. 'Production' on a resume outranks 'personal project'.",
+    "Two deep projects, not eight shallow ones.",
+    "Build it by hand before you reach for the framework. Then reach for the framework.",
+    "Apply from Month 4, not Month 7. Interviews are the fastest feedback loop you have."
+  ],
+  "chapters": [
+    "m0",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5",
+    "m6",
+    "m7"
+  ]
+}

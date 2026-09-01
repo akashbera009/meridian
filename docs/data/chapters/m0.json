@@ -1,0 +1,124 @@
+{
+  "id": "m0",
+  "name": "BOOT",
+  "label": "Month 0 · Setup",
+  "goal": "Environment, keys, and the 20-line tool loop that makes everything else make sense.",
+  "weeks": [
+    {
+      "id": "w00",
+      "n": 0,
+      "phase": "m0",
+      "start": "2026-09-01",
+      "end": "2026-09-06",
+      "title": "Boot sector",
+      "why": "You cannot learn LLM engineering while also fighting your environment. Spend this week making the friction zero, then write the 20-line loop that the whole roadmap is layers on top of.",
+      "hours": 10,
+      "tasks": [
+        {
+          "id": "w00.1",
+          "t": "Create the GitHub repo, push this site, enable GitHub Pages (Settings > Pages > branch main, / root)",
+          "h": 1.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w00.2",
+          "t": "Get free API keys: Google AI Studio (Gemini, generous free tier), Groq (free + very fast), OpenRouter (has free models)",
+          "h": 1,
+          "d": 2
+        },
+        {
+          "id": "w00.3",
+          "t": "Install uv (astral) and create a Python 3.12 project. Stop using pip/venv by hand.",
+          "h": 1,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w00.4",
+          "t": "Install Ollama, pull llama3.2:3b and nomic-embed-text. You now have a zero-cost local model for unlimited experimentation.",
+          "h": 1,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w00.5",
+          "t": "Write the 20-line loop: a script that calls a model, gives it ONE tool that queries your existing Django DB, and loops until it answers. No framework.",
+          "h": 3,
+          "d": 4,
+          "dEnd": 6
+        },
+        {
+          "id": "w00.6",
+          "t": "Write a baseline note in this site: what you already know, what scares you, what you think an AI Engineer does. You will re-read this in Week 30.",
+          "h": 0.5,
+          "d": 6
+        },
+        {
+          "id": "w00.7",
+          "t": "AT WORK: list every workflow at your company that touches unstructured text (support tickets, PDFs, notes, logs, emails). This list is your Month 4 opportunity.",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "Google AI Studio — free Gemini API keys",
+          "url": "https://aistudio.google.com/",
+          "id": "w00.r0",
+          "role": "reference",
+          "task": "w00.2"
+        },
+        {
+          "type": "doc",
+          "label": "Groq Console — free, fastest inference available",
+          "url": "https://console.groq.com/",
+          "id": "w00.r1",
+          "role": "reference",
+          "task": "w00.2"
+        },
+        {
+          "type": "doc",
+          "label": "OpenRouter — one API, many models, some free",
+          "url": "https://openrouter.ai/models?q=free",
+          "id": "w00.r2",
+          "role": "reference",
+          "task": "w00.2"
+        },
+        {
+          "type": "doc",
+          "label": "uv — the Python package manager to use in 2026",
+          "url": "https://docs.astral.sh/uv/",
+          "id": "w00.r3",
+          "role": "reference",
+          "task": "w00.3"
+        },
+        {
+          "type": "doc",
+          "label": "Ollama — run models locally for free",
+          "url": "https://ollama.com/",
+          "id": "w00.r4",
+          "role": "reference",
+          "task": "w00.4"
+        },
+        {
+          "type": "video",
+          "label": "Karpathy — Deep Dive into LLMs like ChatGPT (3.5h, watch across the week)",
+          "url": "https://www.youtube.com/watch?v=7xTGNNLPyMI",
+          "id": "w00.r5",
+          "role": "background"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "The 20-line loop — this is the whole field in miniature",
+          "body": "import os, json\nfrom google import genai\nfrom google.genai import types\n\nclient = genai.Client(api_key=os.environ[\"GEMINI_API_KEY\"])\n\ndef query_golf_courses(state: str) -> str:\n    \"\"\"Look up golf courses in a state from the Django DB.\"\"\"\n    # from courses.models import Course\n    # return json.dumps(list(Course.objects.filter(state=state).values(\"name\",\"city\")[:5]))\n    return json.dumps([{\"name\": \"Pebble Beach\", \"city\": \"Monterey\"}])\n\ntools = [query_golf_courses]\nchat = client.chats.create(\n    model=\"gemini-2.0-flash\",\n    config=types.GenerateContentConfig(tools=tools),   # SDK runs the loop for you\n)\nprint(chat.send_message(\"What golf courses do we have in California?\").text)\n\n# NOW DO IT THE HARD WAY: set automatic_function_calling={'disable': True}\n# and write the while-loop yourself. That is the version you must understand."
+        }
+      ],
+      "deliverable": "A repo with a working tool-calling script and a live GitHub Pages site tracking this roadmap.",
+      "checkpoint": "Can you explain, without notes, what the model actually returned when it 'called a tool'? (It returned text. You parsed it. You called the function. You sent the result back. That's it.)"
+    }
+  ]
+}

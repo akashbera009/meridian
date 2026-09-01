@@ -1,0 +1,340 @@
+{
+  "id": "m6",
+  "name": "PRODUCTION",
+  "label": "Month 6 · Docker, deploy, streaming, cost",
+  "goal": "Get it on the internet with a public URL. Ship the mobile app.",
+  "weeks": [
+    {
+      "id": "w21",
+      "n": 21,
+      "phase": "m6",
+      "start": "2027-01-25",
+      "end": "2027-01-31",
+      "title": "Docker and reproducible packaging",
+      "why": "'It works on my machine' ends the conversation in a system design round. Containerising an ML-adjacent app has real gotchas — model weights, slow builds, huge images — that plain web apps do not have.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w21.1",
+          "t": "Dockerfile fundamentals: layers, caching, .dockerignore, why your image is 4GB",
+          "h": 2.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w21.2",
+          "t": "Multi-stage builds with uv. Get the API image under 500MB.",
+          "h": 2.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w21.3",
+          "t": "Model weights: bake into the image vs mount vs download at boot. Understand the cold-start tradeoff.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w21.4",
+          "t": "docker compose: api + postgres/pgvector + redis, with healthchecks and depends_on conditions",
+          "h": 3,
+          "d": 4,
+          "dEnd": 6
+        },
+        {
+          "id": "w21.5",
+          "t": "Config and secrets: env vars, .env, never bake a key into a layer (it stays in history even if deleted)",
+          "h": 1.5,
+          "d": 6
+        },
+        {
+          "id": "w21.6",
+          "t": "Make `docker compose up` bring the entire stack to life from a fresh clone. Test it by actually cloning fresh.",
+          "h": 2.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "video",
+          "label": "freeCodeCamp — Docker full course (free)",
+          "url": "https://www.youtube.com/watch?v=fqMOX6JJhGo",
+          "id": "w21.r0",
+          "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "Docker — build best practices",
+          "url": "https://docs.docker.com/build/building/best-practices/",
+          "id": "w21.r1",
+          "role": "primary",
+          "task": "w21.1"
+        },
+        {
+          "type": "doc",
+          "label": "uv in Docker — official integration guide",
+          "url": "https://docs.astral.sh/uv/guides/integration/docker/",
+          "id": "w21.r2",
+          "role": "reference",
+          "task": "w21.2"
+        }
+      ],
+      "deliverable": "A fresh clone + `docker compose up` = the full stack running. No manual steps.",
+      "checkpoint": "Time a rebuild after a one-line code change. If it is over 30 seconds, your layer order is wrong."
+    },
+    {
+      "id": "w22",
+      "n": 22,
+      "phase": "m6",
+      "start": "2027-02-01",
+      "end": "2027-02-07",
+      "title": "Deploy it for real (on free tiers)",
+      "why": "A live URL is worth more than three more repos. 'Deployed with a live demo' is in the target JD. Do it on free infrastructure, and learn the AWS vocabulary in parallel because JDs ask for it.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w22.1",
+          "t": "Pick a free host: HuggingFace Spaces (free, you know HF), Render, Fly.io, or Railway. Deploy the FastAPI backend.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w22.2",
+          "t": "Managed Postgres free tier for pgvector: Supabase or Neon. Migrate your vector store to it.",
+          "h": 2.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w22.3",
+          "t": "uvicorn workers, graceful shutdown, healthcheck endpoint, /readyz vs /healthz",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w22.4",
+          "t": "AWS vocabulary for interviews (free tier hands-on where possible): EC2, ECS/Fargate, Lambda, S3, ALB, Secrets Manager, CloudWatch. Know what each is FOR.",
+          "h": 3,
+          "d": 4,
+          "dEnd": 6
+        },
+        {
+          "id": "w22.5",
+          "t": "Cold starts, keeping a free instance warm, and the honest tradeoffs of serverless for LLM apps",
+          "h": 1.5,
+          "d": 6
+        },
+        {
+          "id": "w22.6",
+          "t": "Put the live URL in your README and on your resume",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "HuggingFace Spaces — free hosting for demos (Docker SDK supported)",
+          "url": "https://huggingface.co/docs/hub/spaces",
+          "id": "w22.r0",
+          "role": "primary",
+          "task": "w22.1"
+        },
+        {
+          "type": "doc",
+          "label": "Neon — free Postgres with pgvector",
+          "url": "https://neon.tech/docs/extensions/pgvector",
+          "id": "w22.r1",
+          "role": "primary",
+          "task": "w22.2"
+        },
+        {
+          "type": "video",
+          "label": "freeCodeCamp — AWS Cloud Practitioner full course (free, enough for JD vocabulary)",
+          "url": "https://www.youtube.com/watch?v=NhDYbskXRgc",
+          "id": "w22.r2",
+          "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "Fly.io — free allowance and deploy docs",
+          "url": "https://fly.io/docs/languages-and-frameworks/python/",
+          "id": "w22.r3",
+          "role": "reference",
+          "task": "w22.1"
+        }
+      ],
+      "deliverable": "A public URL anyone can hit, backed by managed Postgres+pgvector.",
+      "checkpoint": "Send the URL to a friend on mobile data. Does it work? Does it stay up for a week?"
+    },
+    {
+      "id": "w23",
+      "n": 23,
+      "phase": "m6",
+      "start": "2027-02-08",
+      "end": "2027-02-14",
+      "title": "Streaming, caching, and cost engineering",
+      "why": "This is where your mobile background becomes an actual differentiator. Almost nobody applying for these roles has streamed LLM tokens into a native app and dealt with reconnects on a flaky mobile network.",
+      "hours": 16,
+      "tasks": [
+        {
+          "id": "w23.1",
+          "t": "SSE consumption in React Native: fetch streaming limits, react-native-sse, or WebSocket fallback. Handle backgrounding and reconnect.",
+          "h": 3.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w23.2",
+          "t": "Perceived latency: time-to-first-token beats total time. Optimise TTFT specifically and measure it.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w23.3",
+          "t": "Provider prompt caching — restructure prompts so the static prefix is cacheable. Measure the cost drop.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w23.4",
+          "t": "Semantic caching with an embedding threshold. Measure hit rate AND false-hit rate (a wrong cache hit is worse than a miss).",
+          "h": 2.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w23.5",
+          "t": "Model routing: cheap model for easy queries, expensive for hard. Build the classifier, measure cost saved vs quality lost.",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w23.6",
+          "t": "Rate limiting, request queues, timeouts, and graceful degradation when the provider is down",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w23.7",
+          "h": 2,
+          "t": "DESIGN VOCABULARY: while it's fresh, write down what you just built as design language — cache layers, rate limiting, backpressure, graceful degradation, TTFT. You now have real answers to 'how would you scale this'; name them before you forget.",
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "Anthropic — prompt caching",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "id": "w23.r0",
+          "role": "primary",
+          "task": "w23.3"
+        },
+        {
+          "type": "doc",
+          "label": "Gemini — context caching",
+          "url": "https://ai.google.dev/gemini-api/docs/caching",
+          "id": "w23.r1",
+          "role": "reference",
+          "task": "w23.3"
+        },
+        {
+          "type": "repo",
+          "label": "react-native-sse — SSE client for RN",
+          "url": "https://github.com/binaryminds/react-native-sse",
+          "id": "w23.r2",
+          "role": "primary",
+          "task": "w23.1"
+        },
+        {
+          "type": "blog",
+          "label": "Chip Huyen — AI engineering patterns and cost optimisation",
+          "url": "https://huyenchip.com/2024/07/25/genai-platform.html",
+          "id": "w23.r3",
+          "role": "background"
+        }
+      ],
+      "deliverable": "A measured cost/latency table: before and after caching + routing. Another number for the resume.",
+      "checkpoint": "What is your cache hit rate, and what is your FALSE hit rate? If you only know the first, you have a quality bug waiting."
+    },
+    {
+      "id": "w24",
+      "n": 24,
+      "phase": "m6",
+      "start": "2027-02-15",
+      "end": "2027-02-21",
+      "title": "PROJECT A SHIP — the AI mobile app",
+      "why": "This is your unfair advantage, and the reason you will beat ML-bootcamp candidates. They cannot build this. A React Native app streaming from your own RAG backend, deployed, with a demo video, is a portfolio nobody else in your bracket has.",
+      "hours": 16,
+      "tasks": [
+        {
+          "id": "w24.1",
+          "t": "RN front end: chat UI, token streaming, citations rendered from retrieved chunks, loading and error states",
+          "h": 5,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w24.2",
+          "t": "Offline and flaky-network handling — this is the mobile-specific engineering nobody else demos",
+          "h": 2.5,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w24.3",
+          "t": "Auth, per-user data isolation, and per-user spend caps",
+          "h": 2,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w24.4",
+          "t": "Wire the deployed backend. End-to-end on a real device over mobile data.",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w24.5",
+          "t": "Record a 2-minute demo video. Put it at the top of the README and on LinkedIn.",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w24.6",
+          "t": "README written for a hiring manager: what it does, architecture diagram, metrics table, live link, demo video",
+          "h": 2.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "Expo EAS Build — ship a real installable build free",
+          "url": "https://docs.expo.dev/build/introduction/",
+          "id": "w24.r0",
+          "role": "primary",
+          "task": "w24.1"
+        },
+        {
+          "type": "blog",
+          "label": "How to write a README that gets you hired",
+          "url": "https://github.com/matiassingers/awesome-readme",
+          "id": "w24.r1",
+          "role": "reference",
+          "task": "w24.6"
+        }
+      ],
+      "deliverable": "PROJECT A: a deployed AI mobile app with a live backend and a 2-minute demo video.",
+      "checkpoint": "Hand your phone to someone who does not code. Can they use it without instructions?"
+    }
+  ]
+}

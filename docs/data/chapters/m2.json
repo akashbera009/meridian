@@ -1,0 +1,430 @@
+{
+  "id": "m2",
+  "name": "RETRIEVAL",
+  "label": "Month 2 · RAG and the evals that prove it works",
+  "goal": "Ingest documents AND measure whether retrieval actually works. This month makes your resume.",
+  "weeks": [
+    {
+      "id": "w05",
+      "n": 5,
+      "phase": "m2",
+      "start": "2026-10-05",
+      "end": "2026-10-11",
+      "title": "Embeddings and chunking",
+      "why": "Chunking is the highest-leverage, least-discussed variable in RAG. Most broken RAG systems are broken here, not at the model. Your HuggingFace background means you can run all of this locally for zero rupees.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w05.1",
+          "t": "What an embedding actually is: a vector, cosine similarity, why 'similar' != 'relevant'",
+          "h": 1.5,
+          "d": 1
+        },
+        {
+          "id": "w05.2",
+          "t": "Run sentence-transformers locally: BAAI/bge-small-en-v1.5 and all-MiniLM-L6-v2. Compare speed and quality. Zero API cost.",
+          "h": 2.5,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w05.3",
+          "t": "Read the MTEB leaderboard properly — understand what the retrieval column means and why the top model is not always your model",
+          "h": 1,
+          "d": 3
+        },
+        {
+          "id": "w05.4",
+          "t": "Chunking strategies: fixed-size, recursive-character, structure-aware (markdown/HTML headers), semantic. Implement all four.",
+          "h": 3.5,
+          "d": 3,
+          "dEnd": 5
+        },
+        {
+          "id": "w05.5",
+          "t": "Overlap, and chunk metadata (source, page, section, date) — metadata is what makes filtering and citations possible",
+          "h": 1.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w05.6",
+          "t": "Document parsing reality: PDFs are hostile. Try pymupdf4llm, unstructured, docling. Pick your poison.",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w05.7",
+          "t": "BUILD: an ingestion pipeline over a real corpus (your company docs, or a public dataset). Output chunk-count/size distributions per strategy.",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "sentence-transformers docs (SBERT) — your local, free embedding stack",
+          "url": "https://sbert.net/",
+          "id": "w05.r0",
+          "role": "primary",
+          "task": "w05.2"
+        },
+        {
+          "type": "doc",
+          "label": "MTEB leaderboard — pick embeddings with data, not vibes",
+          "url": "https://huggingface.co/spaces/mteb/leaderboard",
+          "id": "w05.r1",
+          "role": "reference",
+          "task": "w05.3"
+        },
+        {
+          "type": "blog",
+          "label": "Pinecone — chunking strategies (free learning center, vendor-neutral enough)",
+          "url": "https://www.pinecone.io/learn/chunking-strategies/",
+          "id": "w05.r2",
+          "role": "primary",
+          "task": "w05.4"
+        },
+        {
+          "type": "video",
+          "label": "3Blue1Brown — but what IS a word embedding (visual intuition)",
+          "url": "https://www.youtube.com/watch?v=wjZofJX0v4M",
+          "id": "w05.r3",
+          "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "pymupdf4llm — PDF to markdown, actually works",
+          "url": "https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/",
+          "id": "w05.r4",
+          "role": "reference",
+          "task": "w05.6"
+        }
+      ],
+      "deliverable": "An ingestion pipeline with 4 pluggable chunkers and a stats report on each.",
+      "checkpoint": "Your chunks are 1500 tokens. Why might that be hurting recall, and why might shrinking them hurt answer quality?"
+    },
+    {
+      "id": "w06",
+      "n": 6,
+      "phase": "m2",
+      "start": "2026-10-12",
+      "end": "2026-10-18",
+      "title": "Vector search — build it, then adopt it",
+      "why": "Write cosine similarity in numpy first. It is 15 lines, and after that no vector database is mysterious — they are all indexes plus filtering plus ops. Then learn pgvector, because you know SQL and most companies already run Postgres.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w06.1",
+          "t": "Brute-force search in numpy: normalise, dot product, argsort top-k. 15 lines. This is your mental model forever.",
+          "h": 2,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w06.2",
+          "t": "Why brute force stops working: ANN, HNSW, IVF. Understand the recall/latency tradeoff conceptually.",
+          "h": 1.5,
+          "d": 2
+        },
+        {
+          "id": "w06.3",
+          "t": "FAISS locally — flat vs HNSW index, measure the recall difference",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w06.4",
+          "t": "pgvector on Postgres — your highest-employability option. Docker it, index it, query it with SQL you already know.",
+          "h": 3,
+          "d": 3,
+          "dEnd": 5
+        },
+        {
+          "id": "w06.5",
+          "t": "Metadata filtering — pre-filter vs post-filter, and why post-filtering silently destroys recall",
+          "h": 1.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w06.6",
+          "t": "Hybrid search: BM25 (rank_bm25) + dense, fused with Reciprocal Rank Fusion. Hybrid beats dense-only on most real corpora.",
+          "h": 2.5,
+          "d": 6
+        },
+        {
+          "id": "w06.7",
+          "t": "BUILD: the same corpus queryable through 3 backends behind one interface, plus a hybrid retriever",
+          "h": 1.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "repo",
+          "label": "pgvector — Postgres vector extension",
+          "url": "https://github.com/pgvector/pgvector",
+          "id": "w06.r0",
+          "role": "primary",
+          "task": "w06.4"
+        },
+        {
+          "type": "doc",
+          "label": "FAISS wiki — index types explained",
+          "url": "https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index",
+          "id": "w06.r1",
+          "role": "reference",
+          "task": "w06.3"
+        },
+        {
+          "type": "blog",
+          "label": "Qdrant — hybrid search and RRF explained",
+          "url": "https://qdrant.tech/articles/hybrid-search/",
+          "id": "w06.r2",
+          "role": "primary",
+          "task": "w06.6"
+        },
+        {
+          "type": "doc",
+          "label": "rank_bm25 — sparse retrieval in 5 lines",
+          "url": "https://github.com/dorianbrown/rank_bm25",
+          "id": "w06.r3",
+          "role": "reference",
+          "task": "w06.6"
+        },
+        {
+          "type": "blog",
+          "label": "Supabase — pgvector + free Postgres (doubles as your study-site DB)",
+          "url": "https://supabase.com/docs/guides/ai",
+          "id": "w06.r4",
+          "role": "reference",
+          "task": "w06.4"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "Vector search from scratch — the whole idea, no library",
+          "body": "import numpy as np\n\nclass TinyVectorStore:\n    def __init__(self):\n        self.vecs, self.docs = None, []\n\n    def add(self, embeddings, docs):\n        e = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)\n        self.vecs = e if self.vecs is None else np.vstack([self.vecs, e])\n        self.docs.extend(docs)\n\n    def search(self, q, k=5):\n        q = q / np.linalg.norm(q)\n        sims = self.vecs @ q              # cosine, because everything is normalised\n        idx = np.argpartition(-sims, k)[:k]\n        idx = idx[np.argsort(-sims[idx])]\n        return [(self.docs[i], float(sims[i])) for i in idx]\n\n# That is a vector database. Everything else is indexes, filters, and ops."
+        },
+        {
+          "lang": "python",
+          "label": "Reciprocal Rank Fusion — combine BM25 + dense without tuning weights",
+          "body": "def rrf(rankings: list[list[str]], k: int = 60) -> list[str]:\n    \"\"\"rankings = [bm25_doc_ids_ranked, dense_doc_ids_ranked, ...]\"\"\"\n    scores = {}\n    for ranking in rankings:\n        for rank, doc_id in enumerate(ranking):\n            scores[doc_id] = scores.get(doc_id, 0) + 1.0 / (k + rank + 1)\n    return sorted(scores, key=scores.get, reverse=True)\n\n# No score normalisation needed. No weight tuning. This is why RRF is\n# the default in production hybrid search."
+        }
+      ],
+      "deliverable": "One retriever interface, three backends (numpy / FAISS / pgvector), plus hybrid BM25+dense with RRF.",
+      "checkpoint": "You filter by `tenant_id` AFTER retrieving top-10. Why is that a bug, and what does it do to recall for a small tenant?"
+    },
+    {
+      "id": "w07",
+      "n": 7,
+      "phase": "m2",
+      "start": "2026-10-19",
+      "end": "2026-10-25",
+      "title": "RETRIEVAL EVALS — the differentiator week",
+      "why": "This is the most important week in the entire roadmap. Everyone has a RAG chatbot. Almost nobody can say 'recall@5 went from 0.61 to 0.84'. Do not optimise anything before this week — you would be guessing. Implement the metrics by hand before touching Ragas, so you know what the numbers mean.",
+      "hours": 15,
+      "tasks": [
+        {
+          "id": "w07.1",
+          "t": "Build a golden set: 50-100 (question -> relevant chunk ids) pairs. Generate candidates with an LLM, then HAND-VERIFY every one. This is the work. It is boring. Do it.",
+          "h": 4,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w07.2",
+          "t": "Implement Recall@k and Hit Rate by hand. Understand why recall matters more than precision for the retrieval stage.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w07.3",
+          "t": "Implement MRR and nDCG@k by hand. nDCG is the one interviewers ask about; know why discounting by rank matters.",
+          "h": 2.5,
+          "d": 3,
+          "dEnd": 5
+        },
+        {
+          "id": "w07.4",
+          "t": "Run the baseline. Write the numbers down. Commit them to the repo. This is your 'before'.",
+          "h": 1.5,
+          "d": 5
+        },
+        {
+          "id": "w07.5",
+          "t": "Now try Ragas — compare its numbers against your hand-rolled ones and reconcile any difference",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w07.6",
+          "t": "Build a failure taxonomy: for every miss, label WHY (bad chunking / embedding mismatch / vocabulary gap / document genuinely absent). Count them.",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w07.7",
+          "t": "Read Hamel Husain on evals. Then re-read it. This is the mindset the job is actually about.",
+          "h": 1,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Hamel Husain — Your AI Product Needs Evals (THE canonical free piece)",
+          "url": "https://hamel.dev/blog/posts/evals/",
+          "id": "w07.r0",
+          "role": "primary",
+          "task": "w07.7"
+        },
+        {
+          "type": "blog",
+          "label": "Eugene Yan — evaluating RAG and abstractive summaries",
+          "url": "https://eugeneyan.com/writing/llm-evaluators/",
+          "id": "w07.r1",
+          "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "Ragas — RAG evaluation framework (open source)",
+          "url": "https://docs.ragas.io/",
+          "id": "w07.r2",
+          "role": "primary",
+          "task": "w07.5"
+        },
+        {
+          "type": "blog",
+          "label": "Jason Liu — systematically improving RAG",
+          "url": "https://jxnl.co/writing/2024/08/19/rag-flywheel/",
+          "id": "w07.r3",
+          "role": "reference",
+          "task": "w07.6"
+        },
+        {
+          "type": "blog",
+          "label": "Evaluation metrics for IR: MRR, MAP, nDCG explained",
+          "url": "https://www.pinecone.io/learn/offline-evaluation/",
+          "id": "w07.r4",
+          "role": "primary",
+          "task": "w07.3"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "The metrics, by hand. If you can write these you can discuss them.",
+          "body": "import numpy as np\n\ndef recall_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:\n    if not relevant: return 0.0\n    return len(set(retrieved[:k]) & relevant) / len(relevant)\n\ndef mrr(retrieved: list[str], relevant: set[str]) -> float:\n    \"\"\"Reciprocal rank of the FIRST relevant hit. Rewards getting it right early.\"\"\"\n    for i, doc in enumerate(retrieved, start=1):\n        if doc in relevant:\n            return 1.0 / i\n    return 0.0\n\ndef ndcg_at_k(retrieved: list[str], relevance: dict[str, float], k: int) -> float:\n    \"\"\"Graded relevance, discounted by log(rank). The metric interviewers ask about.\"\"\"\n    gains = [relevance.get(d, 0.0) for d in retrieved[:k]]\n    dcg  = sum(g / np.log2(i + 2) for i, g in enumerate(gains))\n    ideal = sorted(relevance.values(), reverse=True)[:k]\n    idcg = sum(g / np.log2(i + 2) for i, g in enumerate(ideal))\n    return dcg / idcg if idcg else 0.0\n\n# Run over the golden set, average, COMMIT THE NUMBER. That number is your job offer."
+        }
+      ],
+      "deliverable": "eval.py + a golden set in the repo + a committed baseline metrics table. This is the 'before' row.",
+      "checkpoint": "Recall@5 is 0.55. Give three specific hypotheses for why, and the experiment that distinguishes them."
+    },
+    {
+      "id": "w08",
+      "n": 8,
+      "phase": "m2",
+      "start": "2026-10-26",
+      "end": "2026-11-01",
+      "title": "Reranking and query transformation — produce the 'after' number",
+      "why": "Now you optimise, because now you can measure. Reranking is usually the single biggest quality jump in RAG. Every change this week gets re-measured against Week 7's baseline. At the end you have the sentence that gets you interviews.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w08.1",
+          "t": "Cross-encoders vs bi-encoders — why reranking is expensive but far more accurate",
+          "h": 1.5,
+          "d": 1
+        },
+        {
+          "id": "w08.2",
+          "t": "Run BAAI/bge-reranker-v2-m3 locally (free, HuggingFace). Retrieve top-50, rerank to top-5. Measure.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w08.3",
+          "t": "Query expansion / multi-query: generate 3 paraphrases, retrieve for each, fuse with RRF. Measure.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w08.4",
+          "t": "HyDE — embed a hypothetical answer instead of the question. Measure. (It sometimes hurts. Report that honestly.)",
+          "h": 2,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w08.5",
+          "t": "Query decomposition for multi-hop questions. Measure.",
+          "h": 1.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w08.6",
+          "t": "Ablation table: run every combination, record recall@5 / nDCG@10 / latency / cost for each row",
+          "h": 2.5,
+          "d": 6
+        },
+        {
+          "id": "w08.7",
+          "t": "MILESTONE: write the before/after table into your README. This is the resume line.",
+          "h": 1.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "BGE reranker v2 m3 — free local cross-encoder",
+          "url": "https://huggingface.co/BAAI/bge-reranker-v2-m3",
+          "id": "w08.r0",
+          "role": "primary",
+          "task": "w08.2"
+        },
+        {
+          "type": "blog",
+          "label": "Cohere — what reranking is and why it works",
+          "url": "https://cohere.com/blog/rerank",
+          "id": "w08.r1",
+          "role": "primary",
+          "task": "w08.1"
+        },
+        {
+          "type": "blog",
+          "label": "HyDE — precise zero-shot dense retrieval without relevance labels (paper)",
+          "url": "https://arxiv.org/abs/2212.10496",
+          "id": "w08.r2",
+          "role": "reference",
+          "task": "w08.4"
+        },
+        {
+          "type": "video",
+          "label": "HF NLP Course — semantic search chapter (free, hands-on)",
+          "url": "https://huggingface.co/learn/nlp-course/chapter5/6",
+          "id": "w08.r3",
+          "role": "background"
+        }
+      ],
+      "code": [
+        {
+          "lang": "markdown",
+          "label": "The table that goes in your README (and your resume)",
+          "body": "## Retrieval evaluation\n\nCorpus: 4,200 chunks / 118 documents. Golden set: 87 hand-verified queries.\n\n| Configuration                        | Recall@5 | nDCG@10 | p95 latency | $/1k queries |\n|--------------------------------------|----------|---------|-------------|--------------|\n| Dense only (bge-small, 512 chunk)    | 0.61     | 0.58    | 90 ms       | $0.02        |\n| + structure-aware chunking           | 0.68     | 0.64    | 90 ms       | $0.02        |\n| + hybrid BM25 (RRF)                  | 0.74     | 0.70    | 130 ms      | $0.02        |\n| + cross-encoder rerank (top-50 -> 5) | **0.84** | **0.81**| 380 ms      | $0.02        |\n| + HyDE                               | 0.83     | 0.80    | 1,100 ms    | $0.31        |\n\n**Shipped:** hybrid + rerank. HyDE was reverted — no recall gain, 3x latency, 15x cost.\n\n<!-- Reporting the thing that DIDN'T work is what makes this credible. -->"
+        }
+      ],
+      "deliverable": "A README ablation table showing measured improvement, including at least one change you reverted because the data said so.",
+      "checkpoint": "Say out loud, in one sentence: 'I improved recall@5 from X to Y by doing Z.' If you cannot, Month 2 is not finished."
+    }
+  ]
+}

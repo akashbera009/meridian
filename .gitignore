@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+__pycache__/
+.venv/
+.env
+*.log
+
+# local git identity for this workspace — machine config, not project content
+.gitconfig

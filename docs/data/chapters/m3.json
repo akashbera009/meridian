@@ -1,0 +1,179 @@
+{
+  "id": "m3",
+  "name": "JUDGE",
+  "label": "Month 3 · Generation evals, then PAUSE",
+  "goal": "One self-contained week on LLM-as-judge and tracing, then a clean 3-week park.",
+  "weeks": [
+    {
+      "id": "w09",
+      "n": 9,
+      "phase": "m3",
+      "start": "2026-11-02",
+      "end": "2026-11-08",
+      "title": "Generation evals + tracing (self-contained before the pause)",
+      "why": "Retrieval evals answer 'did we find it'. Generation evals answer 'did we use it honestly'. This week is deliberately built as a closed unit — you will pause for three weeks after it, so it ends with nothing half-finished.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w09.1",
+          "t": "Faithfulness / groundedness — is every claim supported by a retrieved chunk? This is how you measure hallucination.",
+          "h": 2.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w09.2",
+          "t": "Answer relevance and context precision. Know the difference between 'wrong answer' and 'right answer, wrong reason'.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w09.3",
+          "t": "LLM-as-judge: write a rubric, use a stronger model as judge, and beware position bias and self-preference bias",
+          "h": 3,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w09.4",
+          "t": "CALIBRATE the judge: label 30 examples yourself, measure judge-vs-you agreement. An uncalibrated judge is a random number generator.",
+          "h": 2.5,
+          "d": 4,
+          "dEnd": 6
+        },
+        {
+          "id": "w09.5",
+          "t": "Set up Langfuse (free tier or self-host) or Arize Phoenix (fully OSS). Trace one full RAG request end to end.",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w09.6",
+          "t": "PAUSE PREP: write a handover note to your future self — what you were doing, what is broken, what is next, how to restart the stack in one command",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Eugene Yan — LLM evaluators (judges), biases and how to calibrate",
+          "url": "https://eugeneyan.com/writing/llm-evaluators/",
+          "id": "w09.r0",
+          "role": "primary",
+          "task": "w09.3"
+        },
+        {
+          "type": "doc",
+          "label": "Langfuse — open-source LLM observability, generous free tier",
+          "url": "https://langfuse.com/docs",
+          "id": "w09.r1",
+          "role": "primary",
+          "task": "w09.5"
+        },
+        {
+          "type": "doc",
+          "label": "Arize Phoenix — fully open-source tracing and evals",
+          "url": "https://arize.com/docs/phoenix",
+          "id": "w09.r2",
+          "role": "reference",
+          "task": "w09.5"
+        },
+        {
+          "type": "blog",
+          "label": "Anthropic — creating strong empirical evaluations",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests",
+          "id": "w09.r3",
+          "role": "primary",
+          "task": "w09.1"
+        }
+      ],
+      "deliverable": "An end-to-end traced RAG pipeline + a calibrated LLM judge with a measured agreement rate against your own labels. Plus a handover note.",
+      "checkpoint": "Your judge scores your system 4.6/5. Why is that number meaningless on its own, and what makes it meaningful?"
+    },
+    {
+      "id": "w10",
+      "n": 10,
+      "phase": "m3",
+      "status": "gap",
+      "start": "2026-11-09",
+      "end": "2026-11-15",
+      "title": "PARKED — week 1 of 3",
+      "why": "Planned disruption. This is scheduled, not a failure. The roadmap accounts for it; do not try to 'catch up' by cramming, and do not feel behind. Your Week 9 handover note is waiting.",
+      "hours": 0,
+      "tasks": [
+        {
+          "id": "w10.1",
+          "t": "OPTIONAL, ZERO PRESSURE: if you get a spare hour, watch something passive. No laptop required.",
+          "h": 0,
+          "d": 1
+        }
+      ],
+      "resources": [
+        {
+          "type": "video",
+          "label": "3Blue1Brown — Neural networks series (pure watching, no setup)",
+          "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi",
+          "id": "w10.r0",
+          "role": "background"
+        }
+      ],
+      "deliverable": "Nothing. That is the point.",
+      "checkpoint": ""
+    },
+    {
+      "id": "w11",
+      "n": 11,
+      "phase": "m3",
+      "status": "gap",
+      "start": "2026-11-16",
+      "end": "2026-11-22",
+      "title": "PARKED — week 2 of 3",
+      "why": "Still parked. Protect the pause — half-studying during a disruption produces guilt without learning.",
+      "hours": 0,
+      "tasks": [
+        {
+          "id": "w11.1",
+          "t": "OPTIONAL: podcasts or talks while commuting. Latent Space, or any conference talk on LLM evals.",
+          "h": 0,
+          "d": 1
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Latent Space — the AI engineer podcast/newsletter (free)",
+          "url": "https://www.latent.space/",
+          "id": "w11.r0",
+          "role": "background"
+        }
+      ],
+      "deliverable": "Nothing.",
+      "checkpoint": ""
+    },
+    {
+      "id": "w12",
+      "n": 12,
+      "phase": "m3",
+      "status": "gap",
+      "start": "2026-11-23",
+      "end": "2026-11-29",
+      "title": "PARKED — week 3 of 3 · re-entry ramp",
+      "why": "Last parked week. In the final 2 days, do one 30-minute action only: open the repo and run the test suite. Nothing else. The goal is to remove the activation energy for Week 13.",
+      "hours": 1,
+      "tasks": [
+        {
+          "id": "w12.1",
+          "t": "Last 2 days only: git pull, docker compose up, run eval.py once. Confirm it still runs. Stop there.",
+          "h": 1,
+          "d": 1,
+          "dEnd": 6
+        }
+      ],
+      "resources": [],
+      "deliverable": "A green test run. That is all.",
+      "checkpoint": ""
+    }
+  ]
+}

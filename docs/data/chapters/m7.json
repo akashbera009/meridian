@@ -1,0 +1,496 @@
+{
+  "id": "m7",
+  "name": "INTERVIEW",
+  "label": "Month 7 · ML fluency + interview grind",
+  "goal": "Hold your own on attention and precision/recall. Convert applications to offers.",
+  "weeks": [
+    {
+      "id": "w25",
+      "n": 25,
+      "phase": "m7",
+      "start": "2027-02-22",
+      "end": "2027-02-28",
+      "title": "Transformers and attention — intuition, not derivation",
+      "why": "You will get asked 'how does attention work?' You do not need to derive it. You need to explain it clearly in 3 minutes with your hands. Budget one week, not one month — this is a communication task, not a research one.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w25.1",
+          "t": "3Blue1Brown transformer chapters — watch twice. Best explanation that exists, free.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w25.2",
+          "t": "Q/K/V intuition: what query, key and value actually mean. Why 'attention' is a weighted lookup.",
+          "h": 2.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w25.3",
+          "t": "Tokenization: BPE, why token counts differ per language, why models cannot count letters in 'strawberry'",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w25.4",
+          "t": "Context windows, KV cache, and why long context is expensive (quadratic attention)",
+          "h": 2,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w25.5",
+          "t": "Pretraining vs SFT vs RLHF/DPO — the three stages, at a level you can discuss",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w25.6",
+          "t": "RECORD YOURSELF explaining attention in 5 minutes. Watch it back. Re-record until it is clean.",
+          "h": 2.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "video",
+          "label": "3Blue1Brown — Attention in transformers, visually explained",
+          "url": "https://www.youtube.com/watch?v=eMlx5fFNoYc",
+          "id": "w25.r0",
+          "role": "primary",
+          "task": "w25.1"
+        },
+        {
+          "type": "video",
+          "label": "Karpathy — Deep Dive into LLMs like ChatGPT (3.5h)",
+          "url": "https://www.youtube.com/watch?v=7xTGNNLPyMI",
+          "id": "w25.r1",
+          "role": "background"
+        },
+        {
+          "type": "video",
+          "label": "Karpathy — Let's build the GPT Tokenizer",
+          "url": "https://www.youtube.com/watch?v=zduSFxRajkE",
+          "id": "w25.r2",
+          "role": "primary",
+          "task": "w25.3"
+        },
+        {
+          "type": "blog",
+          "label": "Jay Alammar — The Illustrated Transformer",
+          "url": "https://jalammar.github.io/illustrated-transformer/",
+          "id": "w25.r3",
+          "role": "reference",
+          "task": "w25.2"
+        },
+        {
+          "type": "course",
+          "label": "HF LLM Course — 12 chapters, free",
+          "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+          "id": "w25.r4",
+          "role": "reference",
+          "task": "w25.5"
+        }
+      ],
+      "deliverable": "A 5-minute recording of you explaining attention clearly, with no notes.",
+      "checkpoint": "Explain attention to a backend dev who has never touched ML. If they follow it, you are ready."
+    },
+    {
+      "id": "w26",
+      "n": 26,
+      "phase": "m7",
+      "start": "2027-03-01",
+      "end": "2027-03-07",
+      "title": "ML vocabulary that actually gets asked + one LoRA run",
+      "why": "You are not applying for ML Engineer roles, so ignore most of classical ML. But precision/recall you already used in Week 7, and 'when would you fine-tune instead of RAG?' is asked in nearly every one of these interviews. Learn the narrow band that comes up.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w26.1",
+          "t": "Precision, recall, F1, and the tradeoff. You already applied these in Week 7 — now name them fluently.",
+          "h": 1.5,
+          "d": 1
+        },
+        {
+          "id": "w26.2",
+          "t": "Overfitting, train/val/test splits, data leakage. Connect leakage to your golden set: did any eval question come from a doc you tuned on?",
+          "h": 2,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w26.3",
+          "t": "The decision tree: prompt -> few-shot -> RAG -> fine-tune. Know the cost and latency of each, and why fine-tuning is usually the wrong first move.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w26.4",
+          "t": "LoRA / QLoRA conceptually: what a low-rank adapter is and why it is cheap",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w26.5",
+          "t": "DO ONE small fine-tune on free Colab GPU with HF PEFT + TRL. Small model, small dataset. The point is having done it once.",
+          "h": 4.5,
+          "d": 4,
+          "dEnd": 6
+        },
+        {
+          "id": "w26.6",
+          "t": "Write up: 'here is when I would fine-tune and when I would not', with your own numbers",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "course",
+          "label": "HF LLM Course — fine-tuning chapters (free, Colab-based)",
+          "url": "https://huggingface.co/learn/llm-course/chapter3/1",
+          "id": "w26.r0",
+          "role": "primary",
+          "task": "w26.5"
+        },
+        {
+          "type": "doc",
+          "label": "HF PEFT — LoRA docs",
+          "url": "https://huggingface.co/docs/peft/index",
+          "id": "w26.r1",
+          "role": "reference",
+          "task": "w26.5"
+        },
+        {
+          "type": "video",
+          "label": "StatQuest — precision, recall, ROC, in plain English",
+          "url": "https://www.youtube.com/watch?v=vP06aMoz4v8",
+          "id": "w26.r2",
+          "role": "primary",
+          "task": "w26.1"
+        },
+        {
+          "type": "blog",
+          "label": "Sebastian Raschka — practical tips for finetuning LLMs with LoRA",
+          "url": "https://magazine.sebastianraschka.com/p/practical-tips-for-finetuning-llms",
+          "id": "w26.r3",
+          "role": "reference",
+          "task": "w26.4"
+        }
+      ],
+      "deliverable": "One completed LoRA fine-tune on free Colab, plus a written 'RAG vs fine-tune' decision framework.",
+      "checkpoint": "A stakeholder says 'let's fine-tune a model on our docs'. Talk them out of it in 60 seconds — or agree, with reasons."
+    },
+    {
+      "id": "w27",
+      "n": 27,
+      "phase": "m7",
+      "start": "2027-03-08",
+      "end": "2027-03-14",
+      "title": "LLM system design",
+      "why": "At 1.5-2 YOE for a 12-14 LPA role you will get a design round. It will not be 'design Twitter' — it will be 'design a RAG system for 10 million documents' or 'design a support agent'. Your Django/REST background gives you the scaffolding; you need the LLM-specific layer.",
+      "hours": 16,
+      "tasks": [
+        {
+          "id": "w27.1",
+          "t": "Design doc 1: RAG over 10M documents. Ingestion pipeline, incremental updates, sharding, index refresh, staleness, cost at scale.",
+          "h": 3.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w27.2",
+          "t": "Design doc 2: a multi-tenant support agent. Isolation, PII, escalation to human, audit trail, per-tenant evals.",
+          "h": 3.5,
+          "d": 2,
+          "dEnd": 4
+        },
+        {
+          "id": "w27.3",
+          "t": "Design doc 3: an LLM gateway. Routing, fallback across providers, rate limits, caching, spend caps, observability.",
+          "h": 3,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w27.4",
+          "t": "Practice the shape of the answer: requirements -> constraints -> high level -> deep dive -> failure modes -> evals -> cost",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w27.5",
+          "t": "Always end a design answer with 'and here is how I would measure it'. Almost no candidate does. It lands every time.",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w27.6",
+          "h": 2,
+          "t": "FORK — pick by target list: GCCs reuse SDE-2 question banks, so do classic distributed systems (caching layers, sharding, queues, indexing, CAP). Product cos/startups won't ask it — write a 4th LLM design doc instead.",
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Chip Huyen — building a generative AI platform (the best free system-design reference for this)",
+          "url": "https://huyenchip.com/2024/07/25/genai-platform.html",
+          "id": "w27.r0",
+          "role": "primary",
+          "task": "w27.1"
+        },
+        {
+          "type": "repo",
+          "label": "System Design Primer (for the general scaffolding)",
+          "url": "https://github.com/donnemartin/system-design-primer",
+          "id": "w27.r1",
+          "role": "reference",
+          "task": "w27.6"
+        },
+        {
+          "type": "blog",
+          "label": "Eugene Yan — patterns for building LLM systems and products",
+          "url": "https://eugeneyan.com/writing/llm-patterns/",
+          "id": "w27.r2",
+          "role": "primary",
+          "task": "w27.2"
+        },
+        {
+          "type": "video",
+          "label": "ByteByteGo — system design fundamentals (free YouTube)",
+          "url": "https://www.youtube.com/@ByteByteGo",
+          "id": "w27.r3",
+          "role": "background"
+        },
+        {
+          "type": "video",
+          "label": "Gaurav Sen — system design (free, widely used in India)",
+          "url": "https://www.youtube.com/@gkcs",
+          "id": "w27.r4",
+          "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "Hello Interview — free system design walkthroughs",
+          "url": "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction",
+          "id": "w27.r5",
+          "role": "primary",
+          "task": "w27.4"
+        }
+      ],
+      "deliverable": "Three written design docs in your repo. Reread them the night before any design round.",
+      "checkpoint": "Give the 10M-document answer out loud in 20 minutes, on a whiteboard, without notes."
+    },
+    {
+      "id": "w28",
+      "n": 28,
+      "phase": "m7",
+      "start": "2027-03-15",
+      "end": "2027-03-21",
+      "title": "Interview reps I",
+      "why": "By now you have the substance. What remains is delivery. The gap between 'built it' and 'can explain it under pressure in 40 minutes' is real, and reps are the only way to close it.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w28.1",
+          "t": "Project deep-dive rehearsal: 15 minutes on Project A, 15 on Project B. Record and rewatch both.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w28.2",
+          "t": "Prepare for the hard follow-ups: 'why that chunk size', 'what did you try that failed', 'how do you know it improved'",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w28.3",
+          "t": "DSA light: arrays, strings, hashmaps, two pointers. 25 easy/medium problems. These roles screen lightly; do not over-invest.",
+          "h": 4,
+          "d": 3,
+          "dEnd": 5
+        },
+        {
+          "id": "w28.4",
+          "t": "Python depth: decorators, generators, context managers, GIL, async — standard Indian backend screen material",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w28.5",
+          "t": "Behavioral: STAR stories for conflict, failure, ownership, and 'tell me about a time you shipped under constraints'",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w28.6",
+          "t": "Two mock interviews with real humans",
+          "h": 1,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "NeetCode 150 — free curated DSA list (do the easy/medium arrays+strings+hashmap sections only)",
+          "url": "https://neetcode.io/practice",
+          "id": "w28.r0",
+          "role": "primary",
+          "task": "w28.3"
+        },
+        {
+          "type": "blog",
+          "label": "Common LLM/GenAI interview questions (free compilations — search fresh, they update)",
+          "url": "https://github.com/Devinterview-io/llms-interview-questions",
+          "id": "w28.r1",
+          "role": "reference",
+          "task": "w28.2"
+        }
+      ],
+      "deliverable": "Two recorded project deep-dives and two live mock interviews behind you.",
+      "checkpoint": "Explain your before/after eval table to a skeptical interviewer who asks 'how do you know that is not noise?'"
+    },
+    {
+      "id": "w29",
+      "n": 29,
+      "phase": "m7",
+      "start": "2027-03-22",
+      "end": "2027-03-28",
+      "title": "Interview reps II + application volume",
+      "why": "Job search is a funnel with brutal conversion rates. At ~2% for cold applications and ~20% for referrals, volume and referrals are the whole game. This week is throughput.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w29.1",
+          "t": "40 more applications. Track every one in a sheet: company, role, source, date, status.",
+          "h": 4,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w29.2",
+          "t": "Referral push: message 20 people. Alumni, ex-colleagues, people who liked your LinkedIn posts, open-source contacts.",
+          "h": 3,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w29.3",
+          "t": "Post your Project A demo video on LinkedIn with the metrics table. This does more than 40 cold applications.",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w29.4",
+          "t": "Recruiter outreach: search 'AI Engineer' recruiters at your 40 target companies, message with the demo link",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w29.5",
+          "t": "Keep interviewing. Write down every question you fluffed and fix that gap the same week.",
+          "h": 3.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "levels.fyi India — salary data by company and level",
+          "url": "https://www.levels.fyi/t/software-engineer/locations/india",
+          "id": "w29.r0",
+          "role": "reference",
+          "task": "w29.1"
+        }
+      ],
+      "deliverable": "60+ total applications, 20 referral asks, and one public LinkedIn post with your demo and metrics.",
+      "checkpoint": "How many interviews are in flight? If the answer is under three, the problem is funnel volume, not skill."
+    },
+    {
+      "id": "w30",
+      "n": 30,
+      "phase": "m7",
+      "start": "2027-03-29",
+      "end": "2027-04-04",
+      "title": "Close: negotiation and retrospective",
+      "why": "The last hour of this process is worth more per minute than any other. People routinely leave 2-3 LPA on the table by accepting the first number. Also: go read what you wrote in Week 0.",
+      "hours": 12,
+      "tasks": [
+        {
+          "id": "w30.1",
+          "t": "Never state a number first. When pushed, give a range anchored on data, with your floor at 12.",
+          "h": 1.5,
+          "d": 1
+        },
+        {
+          "id": "w30.2",
+          "t": "Understand the Indian offer structure: fixed vs variable vs ESOP vs joining bonus. Negotiate FIXED — variable is not guaranteed money.",
+          "h": 2,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w30.3",
+          "t": "Create leverage: overlap your processes so offers arrive in the same two weeks. A competing offer is the only real leverage.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w30.4",
+          "t": "Practice the counter out loud: 'I'm excited about the role. Based on my RAG and eval work and the market for AI engineers, I was targeting X. Can we get there?'",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w30.5",
+          "t": "Evaluate offers on more than salary: what will you learn, who will you learn from, is it real AI work or a wrapper",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w30.6",
+          "t": "RETROSPECTIVE: re-read your Week 0 baseline note. Write what changed. Then publish it as a blog post — it is a great signal for the NEXT job.",
+          "h": 3,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Patrick McKenzie — Salary Negotiation (free, the classic; adapt to the Indian market)",
+          "url": "https://www.kalzumeus.com/2012/01/23/salary-negotiation/",
+          "id": "w30.r0",
+          "role": "primary",
+          "task": "w30.1"
+        },
+        {
+          "type": "blog",
+          "label": "levels.fyi India",
+          "url": "https://www.levels.fyi/t/software-engineer/locations/india",
+          "id": "w30.r1",
+          "role": "reference",
+          "task": "w30.5"
+        }
+      ],
+      "deliverable": "A signed offer at 12+ LPA, and a published retrospective post.",
+      "checkpoint": "Compare your Week 0 note to now. That delta is the whole point."
+    }
+  ]
+}

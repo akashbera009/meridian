@@ -1,0 +1,317 @@
+{
+  "id": "m4",
+  "name": "HARDEN",
+  "label": "Month 4 · Eval infrastructure + START APPLYING",
+  "goal": "Turn evals into CI. Then open the job search while you keep building.",
+  "weeks": [
+    {
+      "id": "w13",
+      "n": 13,
+      "phase": "m4",
+      "start": "2026-11-30",
+      "end": "2026-12-06",
+      "title": "Re-entry (deliberately light)",
+      "why": "Coming back from three weeks off, the failure mode is starting new material immediately, getting confused, and concluding you have lost it. You have not. This week is intentionally under-loaded: reload context, ship one small thing, rebuild momentum.",
+      "hours": 8,
+      "tasks": [
+        {
+          "id": "w13.1",
+          "t": "Read your own Week 9 handover note and all your site notes from Months 1-2",
+          "h": 1.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w13.2",
+          "t": "Re-run the full eval harness. Fix whatever broke (dependency drift, expired keys, model deprecations).",
+          "h": 2,
+          "d": 2,
+          "dEnd": 4
+        },
+        {
+          "id": "w13.3",
+          "t": "Re-explain the tool loop to yourself from memory, out loud. Check against your Week 4 code.",
+          "h": 1,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w13.4",
+          "t": "Ship ONE small improvement to the RAG pipeline and measure it. Any improvement. The point is a green delta.",
+          "h": 2.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w13.5",
+          "t": "Re-plan: look at the remaining weeks and adjust anything that no longer fits your life",
+          "h": 1,
+          "d": 6
+        }
+      ],
+      "resources": [],
+      "deliverable": "A working stack, one measured improvement, and your head back in the game.",
+      "checkpoint": "Do you still believe you can do this? If yes, the pause cost you three weeks and nothing else."
+    },
+    {
+      "id": "w14",
+      "n": 14,
+      "phase": "m4",
+      "start": "2026-12-07",
+      "end": "2026-12-13",
+      "title": "Evals as infrastructure, not a script",
+      "why": "A notebook that computes recall is a homework exercise. A CI job that blocks a merge when recall drops is engineering. This distinction is what makes an 'AI Engineer' rather than someone who did an LLM course.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w14.1",
+          "t": "Convert eval.py into a pytest suite with real assertions and thresholds",
+          "h": 2.5,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w14.2",
+          "t": "Run it in GitHub Actions on every PR. Free for public repos.",
+          "h": 2.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w14.3",
+          "t": "Regression gates: fail the build if recall@5 drops more than 2 points from the committed baseline",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w14.4",
+          "t": "Version your golden set. Treat it like a schema migration — when it changes, say why in the commit.",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w14.5",
+          "t": "Try promptfoo — declarative prompt/model comparison, open source, no signup",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w14.6",
+          "t": "Cache eval runs so CI does not cost you money on every push (and so you can afford to run it often)",
+          "h": 1.5,
+          "d": 6
+        },
+        {
+          "id": "w14.7",
+          "t": "AT WORK: pitch one AI feature to your manager, using the workflow list from Week 0. Ask for 3 hours a week.",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "promptfoo — open-source prompt/RAG evaluation and red-teaming",
+          "url": "https://www.promptfoo.dev/docs/intro/",
+          "id": "w14.r0",
+          "role": "primary",
+          "task": "w14.5"
+        },
+        {
+          "type": "doc",
+          "label": "GitHub Actions — Python workflow quickstart",
+          "url": "https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python",
+          "id": "w14.r1",
+          "role": "primary",
+          "task": "w14.2"
+        },
+        {
+          "type": "blog",
+          "label": "Hamel Husain — creating a LLM-as-a-judge that drives business results",
+          "url": "https://hamel.dev/blog/posts/llm-judge/",
+          "id": "w14.r2",
+          "role": "reference",
+          "task": "w14.1"
+        }
+      ],
+      "deliverable": "A CI pipeline that runs your evals on every PR and blocks regressions. Screenshot the failing build — it is interview material.",
+      "checkpoint": "Open a PR that makes retrieval worse. Does CI catch it?"
+    },
+    {
+      "id": "w15",
+      "n": 15,
+      "phase": "m4",
+      "start": "2026-12-14",
+      "end": "2026-12-20",
+      "title": "Observability and cost per request",
+      "why": "'What does one request cost you?' is a standard interview question and most candidates have no answer. Having a number — and knowing which component dominates it — puts you immediately above the pile.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w15.1",
+          "t": "Structured logging with a trace id threaded through the whole request",
+          "h": 2,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w15.2",
+          "t": "Instrument spans: retrieval / rerank / generation. Find out where the time actually goes (it is rarely where you think).",
+          "h": 2.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w15.3",
+          "t": "Token accounting per request: input, output, cached. Compute cost per request and per user session.",
+          "h": 2.5,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w15.4",
+          "t": "p50 / p95 / p99 latency. Know why p95 matters and averages lie.",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w15.5",
+          "t": "Build a small dashboard (Langfuse UI, or your own FastAPI + a chart) showing cost and latency over time",
+          "h": 3,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w15.6",
+          "t": "Error taxonomy in prod: rate limits, timeouts, refusals, malformed structured output. Count each.",
+          "h": 2.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "OpenTelemetry for LLM apps — semantic conventions for GenAI",
+          "url": "https://opentelemetry.io/docs/specs/semconv/gen-ai/",
+          "id": "w15.r0",
+          "role": "reference",
+          "task": "w15.2"
+        },
+        {
+          "type": "doc",
+          "label": "Langfuse — cost tracking and sessions",
+          "url": "https://langfuse.com/docs/model-usage-and-cost",
+          "id": "w15.r1",
+          "role": "primary",
+          "task": "w15.3"
+        },
+        {
+          "type": "blog",
+          "label": "Chip Huyen — building LLM applications for production",
+          "url": "https://huyenchip.com/2023/04/11/llm-engineering.html",
+          "id": "w15.r2",
+          "role": "background"
+        }
+      ],
+      "deliverable": "A dashboard showing cost per request and p95 latency broken down by pipeline stage.",
+      "checkpoint": "What is your cost per request, and which stage dominates it? Answer in one sentence with a number."
+    },
+    {
+      "id": "w16",
+      "n": 16,
+      "phase": "m4",
+      "start": "2026-12-21",
+      "end": "2026-12-27",
+      "title": "OPEN THE JOB SEARCH",
+      "why": "This is where I diverge hardest from the original plan. You are 16 weeks in with a measured RAG system, a CI eval harness, and a cost dashboard — that is already an interviewable profile. Hiring cycles run 6-10 weeks. Start now and offers land while you finish Months 5-7 instead of three months after.",
+      "hours": 16,
+      "tasks": [
+        {
+          "id": "w16.1",
+          "t": "Rewrite your resume around METRICS. Every bullet: what you built, what it measured, what changed. Delete every bullet without a number.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w16.2",
+          "t": "Rewrite LinkedIn headline and About. Target: 'AI Engineer' keywords — RAG, evals, LLM, FastAPI, agents, vector search.",
+          "h": 1.5,
+          "d": 2
+        },
+        {
+          "id": "w16.3",
+          "t": "Write the README for the RAG project as if a hiring manager is the only reader. Before/after table above the fold.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w16.4",
+          "t": "Build a target list of 40 companies: product cos, funded startups, GCCs. Explicitly EXCLUDE service companies — they will anchor you at 7-9 LPA.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w16.5",
+          "t": "Send the first 20 applications. Prioritise referrals — cold applications convert at ~2%, referrals at ~20%.",
+          "h": 3,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w16.8",
+          "h": 3,
+          "t": "ARCHITECTURE WALKTHROUGH: draw ONE diagram of your RAG system, list the 5 tradeoffs you made and why, rehearse it out loud. At 2 YOE this IS the system design round — it just arrives disguised as 'walk me through your project'.",
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w16.6",
+          "t": "Do one mock interview (Pramp / a friend / record yourself). Expect it to go badly. That is the entire point of doing it now.",
+          "h": 1.5,
+          "d": 6
+        },
+        {
+          "id": "w16.7",
+          "t": "Write your 3-minute project pitch and rehearse it out loud until it is boring to you",
+          "h": 1,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Anthropic — interviewing tips (applies broadly to AI eng roles)",
+          "url": "https://www.anthropic.com/candidate-resources",
+          "id": "w16.r0",
+          "role": "reference",
+          "task": "w16.6"
+        },
+        {
+          "type": "doc",
+          "label": "Pramp / Exponent free mock interview matching",
+          "url": "https://www.pramp.com/",
+          "id": "w16.r1",
+          "role": "primary",
+          "task": "w16.6"
+        },
+        {
+          "type": "blog",
+          "label": "levels.fyi India — calibrate your salary ask with data",
+          "url": "https://www.levels.fyi/t/software-engineer/locations/india",
+          "id": "w16.r2",
+          "role": "reference",
+          "task": "w16.4"
+        }
+      ],
+      "deliverable": "20 applications sent, a metrics-driven resume, and one embarrassing mock interview behind you.",
+      "checkpoint": "Does your resume contain at least three numbers? If not, rewrite it."
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+/* ── AI Engineer Track ── terminal theme ─────────────────────────── */
+
+:root{
+  --bg:      #0b0e0f;
+  --panel:   #101416;
+  --panel2:  #14191c;
+  --line:    #232b2f;
+  --line2:   #2f393e;
+  --fg:      #c5cdd3;
+  --dim:     #6b7a83;
+  --dimmer:  #45525a;
+  --green:   #3fb950;
+  --green-d: #1c3a24;
+  --amber:   #d29922;
+  --cyan:    #4bb3c9;
+  --red:     #d9544f;
+  --violet:  #a371f7;
+  --mono: 'JetBrains Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+
+*{box-sizing:border-box; min-width:0}
+html,body{margin:0;padding:0; overflow-x:hidden}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--mono); font-size:13px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--green-d); color:#e8f5ea}
+a{color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--dimmer)}
+a:hover{color:var(--green); border-bottom-color:var(--green)}
+h3{font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--dim);
+   margin:22px 0 8px; font-weight:500}
+.dim{color:var(--dim)}
+.small{font-size:11.5px}
+.hidden{display:none !important}
+
+/* ── header ─────────────────────────────────────────────────────── */
+header{
+  position:sticky; top:0; z-index:40;
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:10px 14px 0;
+}
+.brand{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.prompt{color:var(--green); font-weight:700}
+.title{font-weight:700; letter-spacing:.04em}
+.sub{color:var(--dim); font-size:11.5px}
+.hud{display:flex; align-items:center; gap:6px; margin:8px 0; flex-wrap:wrap}
+.hud-item{
+  display:flex; align-items:baseline; gap:6px;
+  border:1px solid var(--line); padding:2px 8px; background:var(--panel2);
+}
+.hud-item label{font-size:10px; color:var(--dimmer); letter-spacing:.1em}
+.hud-item span{color:var(--green); font-weight:500; font-size:12px}
+.bar{height:2px; background:var(--line); margin:0 -14px}
+.bar-fill{height:100%; width:0; background:var(--green); transition:width .3s}
+
+.btn{
+  font-family:var(--mono); font-size:12px;
+  background:var(--panel2); color:var(--fg);
+  border:1px solid var(--line2); padding:3px 10px; cursor:pointer;
+  border-radius:0; transition:.12s;
+}
+.btn:hover{border-color:var(--green); color:var(--green)}
+.btn-sm{font-size:11px; padding:1px 7px}
+.btn-danger:hover{border-color:var(--red); color:var(--red)}
+.btn.on{border-color:var(--green); color:var(--green); background:var(--green-d)}
+
+/* ── layout ─────────────────────────────────────────────────────── */
+#layout{display:flex; align-items:flex-start; min-height:calc(100vh - 78px)}
+#sidebar{
+  width:280px; flex:0 0 280px; border-right:1px solid var(--line);
+  background:var(--panel); position:sticky; top:78px;
+  height:calc(100vh - 78px); overflow-y:auto;
+}
+.side-head{
+  display:flex; justify-content:space-between; align-items:center; gap:6px;
+  padding:8px 10px; border-bottom:1px solid var(--line);
+  position:sticky; top:0; background:var(--panel); z-index:2;
+}
+.chk-inline{font-size:11px; color:var(--dim); display:flex; align-items:center; gap:4px; cursor:pointer}
+#main{flex:1; min-width:0; padding:18px 22px 80px; max-width:1000px}
+
+/* ── sidebar weeks ──────────────────────────────────────────────── */
+.phase-hd{
+  padding:12px 10px 4px; font-size:10.5px; letter-spacing:.12em;
+  color:var(--amber); border-top:1px solid var(--line); margin-top:4px;
+}
+.phase-hd .g{color:var(--dimmer); display:block; letter-spacing:0; font-size:10.5px; margin-top:2px}
+.wk{
+  display:grid; grid-template-columns:34px 1fr auto; gap:8px; align-items:center;
+  padding:5px 10px; cursor:pointer; border-left:2px solid transparent;
+  color:var(--fg);
+}
+.wk:hover{background:var(--panel2)}
+.wk.sel{background:var(--panel2); border-left-color:var(--green)}
+.wk.done .wk-t{color:var(--dimmer); text-decoration:line-through}
+.wk.gap{opacity:.55}
+.wk.locked .wk-t{color:var(--dim)}
+.wk.now{border-left-color:var(--amber)}
+.wk-n{color:var(--dimmer); font-size:11px}
+.wk.now .wk-n{color:var(--amber); font-weight:700}
+.wk-t{font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.wk-badge{font-size:10px; color:var(--dimmer)}
+.wk-badge.ok{color:var(--green)}
+
+/* ── week pane ──────────────────────────────────────────────────── */
+.pane{animation:fade .15s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.rule{color:var(--line2); user-select:none; white-space:pre; overflow:hidden; font-size:12px}
+.wk-head h1{font-size:19px; margin:2px 0 6px; font-weight:700; letter-spacing:.01em;
+            overflow-wrap:anywhere}
+.meta{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--dim); margin-bottom:14px}
+.meta b{color:var(--fg); font-weight:500}
+.tag{border:1px solid var(--line2); padding:0 6px; font-size:10.5px; letter-spacing:.06em}
+.tag.now{border-color:var(--amber); color:var(--amber)}
+.tag.gap{border-color:var(--violet); color:var(--violet)}
+.tag.done{border-color:var(--green); color:var(--green)}
+
+.why{
+  border-left:2px solid var(--amber); background:var(--panel);
+  padding:10px 14px; margin:0 0 20px; color:#aeb9c0;
+}
+.why::before{content:'why this week  '; color:var(--amber); font-size:10.5px; letter-spacing:.12em; display:block; margin-bottom:4px}
+
+.lockbar{
+  border:1px solid var(--violet); background:#17121f; padding:8px 12px;
+  margin-bottom:16px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+}
+.lockbar span{color:#c3aee8; font-size:12px; flex:1 1 220px}
+
+/* day headers */
+.day{
+  display:flex; gap:12px; align-items:baseline;
+  padding:14px 8px 4px; border-bottom:1px solid var(--line2);
+}
+.day-n{color:var(--amber); font-size:11px; letter-spacing:.16em; font-weight:700}
+.day-h{color:var(--dimmer); font-size:11px}
+.day-p{margin-left:auto; color:var(--dimmer); font-size:11px}
+.day.today{border-bottom-color:var(--green)}
+.day.today .day-n{color:var(--green)}
+.day.today .day-n::after{content:' ◀ today'; letter-spacing:.06em}
+
+/* tasks */
+.task{
+  display:grid; grid-template-columns:16px 1fr 42px 22px; gap:10px; align-items:start;
+  padding:6px 8px; border-bottom:1px solid var(--line);
+}
+.notebtn{
+  background:none; border:none; cursor:pointer; padding:0; font-size:13px;
+  color:var(--dimmer); font-family:var(--mono); line-height:1.5;
+}
+.notebtn:hover{color:var(--green)}
+.notebtn.has{color:var(--amber)}
+
+/* resources + note attached to a task */
+.task-sub{padding:2px 8px 8px 34px; border-bottom:1px solid var(--line)}
+/* nothing attached and no note yet — collapse until the ✎ is used */
+.task-sub.bare{padding:0; border-bottom:none}
+.task-sub.bare .note-wrap:not(.hidden){padding:6px 0 8px}
+.task-res{display:flex; gap:8px; align-items:baseline; padding:3px 0; font-size:11.5px}
+.task-res a{color:var(--dim)}
+.task-res a:hover{color:var(--green)}
+.rdot{color:var(--dimmer); width:13px; flex:none; text-align:center}
+.task-res input.rchk{
+  appearance:none; width:11px; height:11px; flex:none; margin:0; cursor:pointer;
+  border:1px solid var(--line2); background:var(--panel2); position:relative; top:1px;
+}
+.task-res input.rchk:checked{border-color:var(--green); background:var(--green-d)}
+.task-res input.rchk:checked::after{content:'✓'; color:var(--green); position:absolute; left:0; top:-6px; font-size:11px}
+.rrole{font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; flex:none; width:30px}
+.rrole.primary{color:var(--green)}
+.rrole.reference{color:var(--dimmer)}
+.note-wrap{margin-top:6px}
+.note-wrap textarea{
+  width:100%; min-height:84px; resize:vertical; padding:8px;
+  background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  font-family:var(--mono); font-size:12px; line-height:1.6;
+}
+.note-wrap textarea:focus{outline:none; border-color:var(--amber)}
+.task:hover{background:var(--panel)}
+.task input{
+  appearance:none; width:13px; height:13px; margin-top:4px; cursor:pointer;
+  border:1px solid var(--line2); background:var(--panel2); position:relative; flex:none;
+}
+.task input:checked{border-color:var(--green); background:var(--green-d)}
+.task input:checked::after{
+  content:'✓'; color:var(--green); position:absolute; left:1px; top:-4px; font-size:12px;
+}
+.task label{cursor:pointer}
+.task.done label{color:var(--dimmer); text-decoration:line-through}
+.task .h{color:var(--dimmer); font-size:11px; text-align:right; padding-top:2px}
+
+/* resources */
+.res{display:grid; grid-template-columns:64px 1fr; gap:10px; padding:4px 8px; align-items:baseline}
+.res:hover{background:var(--panel)}
+.rtype{font-size:10px; letter-spacing:.08em; text-align:right; color:var(--dimmer)}
+.rtype.video{color:var(--red)}
+.rtype.course{color:var(--violet)}
+.rtype.blog{color:var(--amber)}
+.rtype.doc{color:var(--cyan)}
+.rtype.repo{color:var(--green)}
+
+/* code */
+.code{border:1px solid var(--line); margin:10px 0; background:#0a0d0e}
+.code-hd{
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+  padding:4px 10px; border-bottom:1px solid var(--line); background:var(--panel2);
+  font-size:11px; color:var(--dim);
+}
+.code pre{margin:0; padding:12px; overflow-x:auto; font-size:12px; line-height:1.6}
+.code code{font-family:var(--mono)}
+.k{color:var(--violet)} .s{color:var(--green)} .c{color:var(--dimmer); font-style:italic}
+.n{color:var(--amber)} .f{color:var(--cyan)}
+
+/* callouts */
+.deliv,.check{border:1px solid var(--line); padding:10px 14px; margin:10px 0}
+.deliv{border-left:2px solid var(--green)}
+.check{border-left:2px solid var(--cyan)}
+.deliv::before{content:'deliverable'; color:var(--green)}
+.check::before{content:'self-check'; color:var(--cyan)}
+.deliv::before,.check::before{font-size:10.5px; letter-spacing:.12em; display:block; margin-bottom:4px}
+
+/* notes + timer */
+textarea#notes{
+  width:100%; min-height:170px; resize:vertical;
+  background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  font-family:var(--mono); font-size:12.5px; line-height:1.65; padding:10px;
+}
+textarea#notes:focus{outline:none; border-color:var(--green)}
+.notes-hd{display:flex; justify-content:space-between; align-items:baseline}
+.saved{font-size:10.5px; color:var(--green)}
+
+.timer{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0}
+.clock{font-size:20px; color:var(--amber); font-weight:700; letter-spacing:.04em; min-width:92px}
+.clock.run{color:var(--green)}
+.timer input[type=number]{
+  width:62px; background:var(--panel2); border:1px solid var(--line2); color:var(--fg);
+  font-family:var(--mono); font-size:12px; padding:3px 6px;
+}
+.logs{margin-top:8px; font-size:11.5px; color:var(--dim)}
+.logrow{display:flex; justify-content:space-between; gap:10px; padding:2px 0; border-bottom:1px solid var(--line)}
+.logrow.neg{color:var(--amber)}
+.logrow button{background:none; border:none; color:var(--dimmer); cursor:pointer; font-family:var(--mono)}
+.logrow button:hover{color:var(--red)}
+
+.hbar{height:6px; background:var(--line); margin-top:6px; position:relative}
+.hbar i{position:absolute; left:0; top:0; bottom:0; background:var(--green)}
+.hbar i.over{background:var(--amber)}
+
+/* modal */
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:100;
+       display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto}
+.modal-box{background:var(--panel); border:1px solid var(--line2); width:100%; max-width:560px}
+.modal-head{display:flex; justify-content:space-between; align-items:center;
+            padding:8px 14px; border-bottom:1px solid var(--line); color:var(--dim)}
+.modal-body{padding:14px 18px 22px}
+.fld{display:grid; grid-template-columns:70px 1fr; gap:10px; align-items:center; margin:6px 0}
+.fld span{color:var(--dim); font-size:11.5px}
+.fld input{
+  background:#0a0d0e; border:1px solid var(--line); color:var(--fg);
+  font-family:var(--mono); font-size:12px; padding:5px 8px; width:100%;
+}
+.fld input:focus{outline:none; border-color:var(--green)}
+.row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+
+.toast{
+  position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+  background:var(--panel2); border:1px solid var(--green); color:var(--green);
+  padding:6px 16px; font-size:12px; z-index:200;
+}
+.toast.err{border-color:var(--red); color:var(--red)}
+
+/* mobile */
+@media(max-width:820px){
+  #layout{flex-direction:column}
+  #sidebar{
+    width:100%; flex:none; position:static; height:auto;
+    max-height:40vh; border-right:none; border-bottom:1px solid var(--line);
+  }
+  #main{padding:14px 12px 60px; max-width:100%}
+  .hud-item{font-size:11px}
+  .wk-head h1{font-size:15.5px; line-height:1.4}
+  .rule{display:none}          /* decorative 120-char rules would force overflow */
+  .why,.deliv,.check,.lockbar{padding:9px 11px}
+  .res{grid-template-columns:52px 1fr; gap:8px}
+  .task{grid-template-columns:16px 1fr; gap:8px}
+  .task .h{display:none}
+  .code pre{font-size:11.5px}
+}

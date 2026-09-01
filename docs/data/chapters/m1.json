@@ -1,0 +1,427 @@
+{
+  "id": "m1",
+  "name": "FOUNDATION",
+  "label": "Month 1 · Async + FastAPI + raw LLM APIs",
+  "goal": "Call any provider directly: tool use, structured output, streaming. No frameworks.",
+  "weeks": [
+    {
+      "id": "w01",
+      "n": 1,
+      "phase": "m1",
+      "start": "2026-09-07",
+      "end": "2026-09-13",
+      "title": "Async Python for IO-bound work",
+      "why": "Django taught you synchronous, ORM-first thinking. Every LLM call is IO-bound and slow (300ms-30s). The single biggest latency win in LLM engineering is doing calls concurrently. Interviewers probe this because it separates people who read tutorials from people who shipped.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w01.1",
+          "t": "Understand the event loop: coroutines, await, why async is NOT threads, and why one blocking call freezes everything",
+          "h": 2,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w01.2",
+          "t": "asyncio.gather vs asyncio.TaskGroup (3.11+). Use TaskGroup — gather's error semantics will bite you.",
+          "h": 1.5,
+          "d": 2
+        },
+        {
+          "id": "w01.3",
+          "t": "asyncio.Semaphore for rate limiting. Every provider rate-limits you; this is how you respect it.",
+          "h": 1.5,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w01.4",
+          "t": "httpx.AsyncClient — connection pooling, timeouts, retries. Stop using requests.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w01.5",
+          "t": "The blocking trap: asyncio.to_thread / run_in_executor for CPU or sync-DB work inside an async app",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w01.6",
+          "t": "async context managers and async generators (you need these for streaming next week)",
+          "h": 1.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w01.7",
+          "t": "BUILD: fire 50 LLM calls concurrently with a Semaphore(5), exponential backoff on 429, print p50/p95 latency and total wall time. Compare against the sequential version.",
+          "h": 4,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "doc",
+          "label": "FastAPI — Concurrency and async/await (the best plain-English explanation there is)",
+          "url": "https://fastapi.tiangolo.com/async/",
+          "id": "w01.r0",
+          "role": "primary",
+          "task": "w01.1"
+        },
+        {
+          "type": "video",
+          "label": "mCoding — asyncio in Python (dense, 25 min, rewatch it)",
+          "url": "https://www.youtube.com/watch?v=Qb9s3UiMSTA",
+          "id": "w01.r1",
+          "role": "primary",
+          "task": "w01.1"
+        },
+        {
+          "type": "doc",
+          "label": "Super Fast Python — asyncio guide (free, exhaustive reference)",
+          "url": "https://superfastpython.com/python-asyncio/",
+          "id": "w01.r2",
+          "role": "reference",
+          "task": "w01.2"
+        },
+        {
+          "type": "doc",
+          "label": "httpx async docs",
+          "url": "https://www.python-httpx.org/async/",
+          "id": "w01.r3",
+          "role": "reference",
+          "task": "w01.4"
+        },
+        {
+          "type": "video",
+          "label": "ArjanCodes — async/await in Python",
+          "url": "https://www.youtube.com/watch?v=2IW-ZEui4h4",
+          "id": "w01.r4",
+          "role": "background"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "The pattern you will use for the next 6 months",
+          "body": "import asyncio, time, httpx\n\nSEM = asyncio.Semaphore(5)          # respect the rate limit\n\nasync def call(client, prompt):\n    async with SEM:\n        for attempt in range(4):\n            r = await client.post(URL, json={\"prompt\": prompt}, timeout=60)\n            if r.status_code != 429:\n                return r.json()\n            await asyncio.sleep(2 ** attempt)   # exponential backoff\n        raise RuntimeError(\"rate limited out\")\n\nasync def main(prompts):\n    t0 = time.perf_counter()\n    async with httpx.AsyncClient() as client:\n        async with asyncio.TaskGroup() as tg:    # 3.11+, better errors than gather\n            tasks = [tg.create_task(call(client, p)) for p in prompts]\n    print(f\"{len(prompts)} calls in {time.perf_counter()-t0:.1f}s\")\n    return [t.result() for t in tasks]"
+        }
+      ],
+      "deliverable": "A benchmark script showing sequential vs concurrent wall time for 50 calls. Screenshot the numbers — you will quote them in an interview.",
+      "checkpoint": "Why does `time.sleep(1)` inside an async function destroy your throughput, but `await asyncio.sleep(1)` does not?"
+    },
+    {
+      "id": "w02",
+      "n": 2,
+      "phase": "m1",
+      "start": "2026-09-14",
+      "end": "2026-09-20",
+      "title": "FastAPI properly (mapped from DRF)",
+      "why": "You know DRF. FastAPI is not 'Django but smaller' — the dependency injection and Pydantic-first design change how you structure code. Map each DRF concept to its FastAPI equivalent and you will learn this in a week instead of a month.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w02.1",
+          "t": "Pydantic v2: BaseModel, Field, validators, model_validate, model_dump. This is your DRF serializer replacement — and it is also how you get structured output from LLMs.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w02.2",
+          "t": "Path/query/body params, response_model, status codes. Map to DRF: serializer -> Pydantic model, ViewSet -> APIRouter.",
+          "h": 2,
+          "d": 2,
+          "dEnd": 3
+        },
+        {
+          "id": "w02.3",
+          "t": "Depends() — dependency injection. Use it for auth, DB sessions, and your LLM client. There is no DRF equivalent; learn it properly.",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w02.4",
+          "t": "lifespan context manager (load your embedding model ONCE at startup, not per request)",
+          "h": 1,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w02.5",
+          "t": "StreamingResponse + SSE. This is how token-by-token output reaches your React Native app.",
+          "h": 2.5,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w02.6",
+          "t": "BackgroundTasks, exception handlers, middleware, CORS (your RN app will need CORS)",
+          "h": 1.5,
+          "d": 6
+        },
+        {
+          "id": "w02.7",
+          "t": "BUILD: a FastAPI service with 3 endpoints, one of which streams SSE. Hit the stream from a plain HTML page and watch tokens arrive.",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "course",
+          "label": "FastAPI official tutorial — genuinely the best free docs in Python. Do it end to end.",
+          "url": "https://fastapi.tiangolo.com/tutorial/",
+          "id": "w02.r0",
+          "role": "primary",
+          "task": "w02.2"
+        },
+        {
+          "type": "doc",
+          "label": "Pydantic v2 concepts",
+          "url": "https://docs.pydantic.dev/latest/concepts/models/",
+          "id": "w02.r1",
+          "role": "primary",
+          "task": "w02.1"
+        },
+        {
+          "type": "video",
+          "label": "freeCodeCamp — FastAPI full course (19h, skim to the parts you need)",
+          "url": "https://www.youtube.com/watch?v=0sOvCWFmrtA",
+          "id": "w02.r2",
+          "role": "background"
+        },
+        {
+          "type": "blog",
+          "label": "sse-starlette — the clean way to do Server-Sent Events",
+          "url": "https://github.com/sysid/sse-starlette",
+          "id": "w02.r3",
+          "role": "reference",
+          "task": "w02.5"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "SSE streaming — the endpoint your mobile app will consume",
+          "body": "from fastapi import FastAPI\nfrom fastapi.responses import StreamingResponse\nfrom contextlib import asynccontextmanager\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    app.state.llm = make_client()      # load ONCE, not per request\n    yield\n    await app.state.llm.aclose()\n\napp = FastAPI(lifespan=lifespan)\n\nasync def token_stream(prompt: str):\n    async for chunk in app.state.llm.stream(prompt):\n        yield f\"data: {json.dumps({'t': chunk})}\\n\\n\"   # SSE wire format\n    yield \"data: [DONE]\\n\\n\"\n\n@app.post(\"/chat\")\nasync def chat(body: ChatIn):\n    return StreamingResponse(token_stream(body.message),\n                             media_type=\"text/event-stream\")"
+        }
+      ],
+      "deliverable": "A running FastAPI service with a working SSE endpoint, Pydantic-validated request/response, and auto-generated /docs.",
+      "checkpoint": "Explain Depends() to someone who only knows Django. What problem does it solve that Django middleware does not?"
+    },
+    {
+      "id": "w03",
+      "n": 3,
+      "phase": "m1",
+      "start": "2026-09-21",
+      "end": "2026-09-27",
+      "title": "Raw LLM APIs — no frameworks",
+      "why": "LangChain hides exactly the thing you are being hired to understand. Every abstraction you will later use is a wrapper around an HTTP POST with a messages array. Learn the POST.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w03.1",
+          "t": "The messages array: system / user / assistant roles, multi-turn, why context is resent every call (this is why cost scales with conversation length)",
+          "h": 2,
+          "d": 1,
+          "dEnd": 2
+        },
+        {
+          "id": "w03.2",
+          "t": "Sampling params: temperature, top_p, max_tokens, stop sequences. Know when temperature=0 is wrong.",
+          "h": 1,
+          "d": 2
+        },
+        {
+          "id": "w03.3",
+          "t": "Structured output — three mechanisms: JSON mode, JSON schema / responseSchema, and tool-forcing. Know which providers support which.",
+          "h": 3,
+          "d": 2,
+          "dEnd": 4
+        },
+        {
+          "id": "w03.4",
+          "t": "Streaming: parse SSE from the provider, handle partial JSON, handle mid-stream errors",
+          "h": 2,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w03.5",
+          "t": "Tokens and cost: tokenizers, counting before you send, cost per 1M in/out, why output tokens cost 3-5x input",
+          "h": 1.5,
+          "d": 5
+        },
+        {
+          "id": "w03.6",
+          "t": "Prompt engineering that actually matters: few-shot examples, XML/delimiter structure, chain-of-thought, prefilling the assistant turn",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w03.7",
+          "t": "BUILD: llm.py — ONE interface, four providers behind it (Gemini, Groq, OpenRouter, Ollama). Streaming and structured output work identically across all four.",
+          "h": 2.5,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "course",
+          "label": "Anthropic Courses — prompt engineering interactive tutorial (free, in-repo notebooks)",
+          "url": "https://github.com/anthropics/courses",
+          "id": "w03.r0",
+          "role": "primary",
+          "task": "w03.6"
+        },
+        {
+          "type": "repo",
+          "label": "Anthropic Cookbook — working recipes for tools, RAG, evals",
+          "url": "https://github.com/anthropics/anthropic-cookbook",
+          "id": "w03.r1",
+          "role": "reference",
+          "task": "w03.7"
+        },
+        {
+          "type": "doc",
+          "label": "Gemini API docs — structured output",
+          "url": "https://ai.google.dev/gemini-api/docs/structured-output",
+          "id": "w03.r2",
+          "role": "primary",
+          "task": "w03.3"
+        },
+        {
+          "type": "doc",
+          "label": "Instructor — Pydantic-native structured output (read the source, it is small)",
+          "url": "https://python.useinstructor.com/",
+          "id": "w03.r3",
+          "role": "reference",
+          "task": "w03.3"
+        },
+        {
+          "type": "blog",
+          "label": "Simon Willison's blog — the best running commentary on the field",
+          "url": "https://simonwillison.net/tags/llms/",
+          "id": "w03.r4",
+          "role": "background"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "Structured output via Pydantic — you will use this constantly",
+          "body": "from pydantic import BaseModel, Field\nfrom typing import Literal\n\nclass TicketTriage(BaseModel):\n    category: Literal[\"billing\", \"bug\", \"feature\", \"other\"]\n    severity: int = Field(ge=1, le=5)\n    summary: str = Field(max_length=200)\n    needs_human: bool\n\n# Gemini: pass the schema directly\nresp = client.models.generate_content(\n    model=\"gemini-2.0-flash\",\n    contents=ticket_text,\n    config={\"response_mime_type\": \"application/json\",\n            \"response_schema\": TicketTriage},\n)\ntriage = TicketTriage.model_validate_json(resp.text)   # typed, validated\n\n# THE LESSON: the model returns a string. Pydantic is what makes it data.\n# When validation fails, feed the error back to the model and retry. That's\n# all any 'structured output library' does."
+        }
+      ],
+      "deliverable": "llm.py — a provider-agnostic module. Swapping Gemini for Groq is a one-line change.",
+      "checkpoint": "Your structured-output call returns malformed JSON 5% of the time. Name three ways to fix it, in order of cost."
+    },
+    {
+      "id": "w04",
+      "n": 4,
+      "phase": "m1",
+      "start": "2026-09-28",
+      "end": "2026-10-04",
+      "title": "Tool use / function calling — write the loop yourself",
+      "why": "This is the single most important week of Month 1. Agents, MCP, LangGraph, Claude Code, every AI product you admire — all of it is this loop. Once you have written it by hand, no agent framework can confuse you again.",
+      "hours": 14,
+      "tasks": [
+        {
+          "id": "w04.1",
+          "t": "The anatomy: tool schema -> model emits tool_use -> YOU execute -> send tool_result -> model continues. Draw it on paper.",
+          "h": 1.5,
+          "d": 1
+        },
+        {
+          "id": "w04.2",
+          "t": "Write the while-loop by hand. No SDK auto-execution. Handle max_iterations to avoid infinite loops.",
+          "h": 3,
+          "d": 1,
+          "dEnd": 3
+        },
+        {
+          "id": "w04.3",
+          "t": "Parallel tool calls — the model can request several at once. Run them with asyncio (Week 1 pays off here).",
+          "h": 2,
+          "d": 3,
+          "dEnd": 4
+        },
+        {
+          "id": "w04.4",
+          "t": "Error handling: what do you send back when a tool raises? (Answer: the error message, as a tool_result. The model can often recover.)",
+          "h": 1.5,
+          "d": 4,
+          "dEnd": 5
+        },
+        {
+          "id": "w04.5",
+          "t": "Tool design: descriptions are prompts. Rewrite a bad tool description and measure the difference in correct-call rate.",
+          "h": 2,
+          "d": 5,
+          "dEnd": 6
+        },
+        {
+          "id": "w04.6",
+          "t": "Wire 3 real tools over your Django DB: a filtered query, an aggregate, and a write action with confirmation",
+          "h": 2,
+          "d": 6
+        },
+        {
+          "id": "w04.7",
+          "t": "MILESTONE: FastAPI streaming chat endpoint + the hand-written tool loop + 3 real tools. This is Project A's backend v0.",
+          "h": 2,
+          "d": 6
+        }
+      ],
+      "resources": [
+        {
+          "type": "blog",
+          "label": "Anthropic — Building Effective Agents (the single most-cited free piece in the field; read it twice)",
+          "url": "https://www.anthropic.com/engineering/building-effective-agents",
+          "id": "w04.r0",
+          "role": "primary",
+          "task": "w04.1"
+        },
+        {
+          "type": "doc",
+          "label": "Anthropic — Tool use docs",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview",
+          "id": "w04.r1",
+          "role": "primary",
+          "task": "w04.2"
+        },
+        {
+          "type": "doc",
+          "label": "Gemini — Function calling",
+          "url": "https://ai.google.dev/gemini-api/docs/function-calling",
+          "id": "w04.r2",
+          "role": "reference",
+          "task": "w04.2"
+        },
+        {
+          "type": "blog",
+          "label": "Anthropic — Writing effective tools for agents",
+          "url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+          "id": "w04.r3",
+          "role": "primary",
+          "task": "w04.5"
+        }
+      ],
+      "code": [
+        {
+          "lang": "python",
+          "label": "The loop. Memorise this shape.",
+          "body": "async def run(user_msg, tools, max_iters=10):\n    messages = [{\"role\": \"user\", \"content\": user_msg}]\n\n    for i in range(max_iters):\n        resp = await llm.chat(messages, tools=[t.schema for t in tools])\n        messages.append({\"role\": \"assistant\", \"content\": resp.content})\n\n        calls = [b for b in resp.content if b.type == \"tool_use\"]\n        if not calls:\n            return resp.text                       # model is done\n\n        # execute requested tools CONCURRENTLY (Week 1 pays off)\n        async def exec_one(c):\n            try:\n                out = await tools[c.name](**c.input)\n            except Exception as e:\n                out = f\"ERROR: {e}\"                # errors go back as results\n            return {\"type\": \"tool_result\", \"tool_use_id\": c.id, \"content\": str(out)}\n\n        results = await asyncio.gather(*[exec_one(c) for c in calls])\n        messages.append({\"role\": \"user\", \"content\": results})\n\n    raise RuntimeError(\"hit max iterations\")"
+        }
+      ],
+      "deliverable": "PROJECT A BACKEND v0 — a streaming FastAPI chat endpoint with a hand-written tool loop over your real database.",
+      "checkpoint": "Delete your framework imports. Can you still build a working agent? If yes, Month 1 succeeded."
+    }
+  ]
+}
