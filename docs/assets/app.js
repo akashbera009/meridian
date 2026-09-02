@@ -29,7 +29,8 @@ function migrateKeys() {
 
 let ROADMAP = null;
 let state   = null;
-let current = null;              // selected week id
+let current = null;              // selected week id, or 'notes'
+let lastWeek = null;             // week to return to when leaving the notebook
 let tick    = null;              // timer interval
 let pushTimer = null;
 
@@ -935,6 +936,8 @@ function toast(msg, isErr = false) {
 function select(id) {
   current = id;
   location.hash = id;
+  if (id !== 'notes') lastWeek = id;
+  $('#btn-notes')?.classList.toggle('on', id === 'notes');
   if (id === 'notes') renderNotes(); else renderWeek(weekById(id));
   renderSidebar();
   $('.wk.sel')?.scrollIntoView({ block: 'nearest' });     // sidebar follows you
@@ -998,7 +1001,8 @@ async function boot() {
   wireSettings();
   $('#btn-sync').onclick  = () => ghReady() ? pull() : openSettings();
   $('#btn-jump').onclick  = () => select(todayWeek().id);
-  $('#btn-notes').onclick = () => select('notes');
+  // toggle: open the notebook, or click again to go back to where you were
+  $('#btn-notes').onclick = () => select(current === 'notes' ? (lastWeek || todayWeek().id) : 'notes');
   $('#btn-weeks').onclick = () => $('#sidebar').classList.toggle('collapsed');
   $('#hide-done').onchange = renderSidebar;
 
