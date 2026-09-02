@@ -421,7 +421,8 @@
         }
       ],
       "deliverable": "PROJECT A BACKEND v0 — a streaming FastAPI chat endpoint with a hand-written tool loop over your real database.",
-      "checkpoint": "Delete your framework imports. Can you still build a working agent? If yes, Month 1 succeeded."
+      "checkpoint": "Delete your framework imports. Can you still build a working agent? If yes, Month 1 succeeded.",
+      "milestone": "Project A · backend v0"
     }
   ]
 }

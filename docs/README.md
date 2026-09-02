@@ -20,6 +20,22 @@ setup foundation  retrieval   judge   (3 weeks)   harden   agents      productio
                     line
 ```
 
+## What it does
+
+Open it and the top of the page is **tonight**: today's block of tasks, a timer, hours logged
+today, and a row of dots for the days you showed up this week. Below that, the week. The header
+says whether you're **on track** — planned hours expected by today vs hours actually ticked,
+with the 3-week park excluded so it never reads as falling behind.
+
+Every week ends in a **deliverable** with a link field. Paste the repo, commit, screenshot or live
+URL, and the **notebook** view (⌕) turns those into a ship log — your portfolio index, built as a
+side effect of doing the work. The **self-check** on each week has an answer box; from week 1, a
+past one resurfaces in the tonight strip each day as spaced recall. The notebook also collects
+every per-task note and answer, searchable.
+
+The four ship-points — W4, W8, W20, W24 — are starred. Finishing a week or unlocking the next one
+says so.
+
 ## Run it
 
 ```bash

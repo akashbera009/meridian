@@ -21,7 +21,10 @@
   <div class="hud">
     <div class="hud-item"><label>PROGRESS</label><span id="hud-progress">--</span></div>
     <div class="hud-item"><label>WEEK</label><span id="hud-week">--</span></div>
+    <div class="hud-item"><label>PACE</label><span id="hud-pace">--</span></div>
     <div class="hud-item"><label>LOGGED</label><span id="hud-hours">--</span></div>
+    <button id="btn-weeks" class="btn mobile-only" title="Show week list">☰ weeks</button>
+    <button id="btn-notes" class="btn" title="Every note, answer and shipped link in one place">⌕ notebook</button>
     <button id="btn-sync" class="btn" title="Sync with GitHub">⇅ <span id="sync-label">local</span></button>
     <button id="btn-settings" class="btn">⚙</button>
   </div>
@@ -38,8 +41,9 @@
   </nav>
 
   <main id="main">
-    <div id="loading" class="pane">
-      <p class="dim">$ fetching data/roadmap.json …</p>
+    <div id="tonight"></div>
+    <div id="pane">
+      <p class="dim">$ loading curriculum …</p>
     </div>
   </main>
 </div>

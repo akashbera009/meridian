@@ -334,7 +334,8 @@
         }
       ],
       "deliverable": "PROJECT A: a deployed AI mobile app with a live backend and a 2-minute demo video.",
-      "checkpoint": "Hand your phone to someone who does not code. Can they use it without instructions?"
+      "checkpoint": "Hand your phone to someone who does not code. Can they use it without instructions?",
+      "milestone": "Project A ships"
     }
   ]
 }

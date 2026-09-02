@@ -270,8 +270,81 @@ textarea#notes:focus{outline:none; border-color:var(--green)}
 }
 .toast.err{border-color:var(--red); color:var(--red)}
 
+/* ── tonight strip ──────────────────────────────────────────────── */
+.tonight{border:1px solid var(--line2); background:var(--panel); margin-bottom:22px}
+.tn-head{display:flex; gap:12px; align-items:baseline; padding:8px 12px;
+         border-bottom:1px solid var(--line); flex-wrap:wrap}
+.tn-head .prompt{font-size:12px}
+.tn-meta{color:var(--dim); font-size:11.5px; flex:1 1 220px}
+.tn-meta b{color:var(--fg); font-weight:500}
+.tn-head .btn{margin-left:auto}
+.tonight.collapsed .tn-body{display:none}
+.tn-body{padding:2px 12px 10px}
+.tn-empty{color:var(--dim); padding:10px 0 6px; font-size:12px}
+.tn-next{color:var(--cyan); font-size:10.5px; letter-spacing:.14em; padding:8px 8px 0; display:block}
+.tn-foot{display:flex; gap:14px; align-items:center; flex-wrap:wrap; padding:10px 0 2px;
+         font-size:11.5px; color:var(--dim); border-top:1px solid var(--line); margin-top:4px}
+.tn-foot .clock{font-size:15px; min-width:72px}
+.tn-go{margin-left:auto}
+
+.dots{display:inline-flex; gap:4px; align-items:center; vertical-align:middle}
+.dot{width:9px; height:9px; border:1px solid var(--line2); background:var(--panel2)}
+.dot.on{background:var(--green); border-color:var(--green)}
+.dot.today{border-color:var(--amber)}
+.dot.future{opacity:.3}
+
+.recall{border-top:1px dashed var(--line2); margin-top:10px; padding-top:8px}
+.rc-tag{color:var(--violet); font-size:10.5px; letter-spacing:.12em}
+.rc-q{color:#aeb9c0; margin:4px 0 6px; font-size:12px}
+.rc-a{white-space:pre-wrap; background:#0a0d0e; border:1px solid var(--line); padding:8px;
+      margin-top:6px; font-size:12px}
+
+/* pace */
+#hud-pace.ok{color:var(--green)} #hud-pace.behind{color:var(--amber)} #hud-pace.ahead{color:var(--cyan)}
+
+/* deliverable link + checkpoint answer */
+.deliv input,.check textarea{
+  width:100%; margin-top:8px; background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  font-family:var(--mono); font-size:12px; padding:6px 8px;
+}
+.deliv input:focus,.check textarea:focus{outline:none; border-color:var(--green)}
+.check textarea{min-height:76px; resize:vertical; line-height:1.6}
+.ship-link{display:inline-block; margin-top:6px; font-size:11.5px}
+.ans-hd{display:flex; justify-content:space-between; font-size:10.5px; color:var(--dimmer);
+        margin-top:8px; letter-spacing:.08em}
+
+/* notebook view */
+.nb-search{width:100%; background:#0a0d0e; color:var(--fg); border:1px solid var(--line2);
+           font-family:var(--mono); font-size:13px; padding:8px 10px; margin:6px 0 14px}
+.nb-search:focus{outline:none; border-color:var(--green)}
+.ship-row{display:grid; grid-template-columns:44px 1fr; gap:10px; padding:6px 8px;
+          border-bottom:1px solid var(--line); font-size:12px}
+.ship-row .wn{color:var(--amber); font-size:11px; padding-top:2px}
+.ship-row .dl{color:var(--dim); font-size:11.5px; display:block; margin-top:2px}
+.nb-week{margin-top:18px}
+.nb-week h4{margin:0 0 4px; font-size:12px; font-weight:700}
+.nb-week h4 a{color:inherit; border:none}
+.nb-week h4 a:hover{color:var(--green)}
+.nb-item{display:grid; grid-template-columns:52px 1fr; gap:10px; padding:6px 8px;
+         border-bottom:1px solid var(--line)}
+.nb-k{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--dimmer); padding-top:2px}
+.nb-k.answer{color:var(--cyan)} .nb-k.task{color:var(--amber)} .nb-k.week{color:var(--green)}
+.nb-q{color:var(--dim); font-size:11.5px; margin-bottom:3px}
+.nb-v{white-space:pre-wrap; font-size:12px}
+mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
+
+/* milestones */
+.wk .ms{color:var(--amber); margin-left:4px}
+.tag.ms{border-color:var(--amber); color:var(--amber)}
+
+.mobile-only{display:none}
+
 /* mobile */
 @media(max-width:820px){
+  .mobile-only{display:inline-block}
+  #sidebar.collapsed{max-height:0; overflow:hidden; border-bottom:none}
+  .tn-head .btn{margin-left:0}
+  .tn-go{margin-left:0}
   #layout{flex-direction:column}
   #sidebar{
     width:100%; flex:none; position:static; height:auto;

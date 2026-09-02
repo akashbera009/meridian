@@ -18,29 +18,25 @@
           "id": "w13.1",
           "t": "Read your own Week 9 handover note and all your site notes from Months 1-2",
           "h": 1.5,
-          "d": 1,
-          "dEnd": 2
+          "d": 5
         },
         {
           "id": "w13.2",
           "t": "Re-run the full eval harness. Fix whatever broke (dependency drift, expired keys, model deprecations).",
           "h": 2,
-          "d": 2,
-          "dEnd": 4
+          "d": 6
         },
         {
           "id": "w13.3",
           "t": "Re-explain the tool loop to yourself from memory, out loud. Check against your Week 4 code.",
           "h": 1,
-          "d": 4,
-          "dEnd": 5
+          "d": 6
         },
         {
           "id": "w13.4",
           "t": "Ship ONE small improvement to the RAG pipeline and measure it. Any improvement. The point is a green delta.",
           "h": 2.5,
-          "d": 5,
-          "dEnd": 6
+          "d": 6
         },
         {
           "id": "w13.5",

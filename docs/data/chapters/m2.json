@@ -424,7 +424,8 @@
         }
       ],
       "deliverable": "A README ablation table showing measured improvement, including at least one change you reverted because the data said so.",
-      "checkpoint": "Say out loud, in one sentence: 'I improved recall@5 from X to Y by doing Z.' If you cannot, Month 2 is not finished."
+      "checkpoint": "Say out loud, in one sentence: 'I improved recall@5 from X to Y by doing Z.' If you cannot, Month 2 is not finished.",
+      "milestone": "The resume line"
     }
   ]
 }

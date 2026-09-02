@@ -107,8 +107,16 @@ function locked(w) {
   return prev ? pct(prev) < 60 : false;
 }
 
+/** Local calendar date as YYYY-MM-DD. toISOString() is UTC, which would
+ *  file a 1am IST session under the previous day. */
+const localISO = (d = new Date()) => {
+  const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset());
+  return x.toISOString().slice(0, 10);
+};
+const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+
 function todayWeek() {
-  const t = new Date().toISOString().slice(0, 10);
+  const t = localISO();
   return weeks().find(w => w.start <= t && t <= w.end)
       || [...weeks()].reverse().find(w => w.end < t)
       || weeks()[0];
@@ -146,6 +154,80 @@ const fmtH = m => {
   return `${m < 0 ? '-' : ''}${Math.floor(a / 60)}h ${String(a % 60).padStart(2, '0')}m`;
 };
 
+/* ── pace, consistency, recall ─────────────────────────────────────── */
+
+/** Planned hours that should be done by today vs hours actually ticked,
+ *  expressed in days of the plan. Gap weeks count on neither side, so the
+ *  3-week park doesn't read as falling behind. */
+function pace() {
+  const t = localISO();
+  let expected = 0, done = 0, planned = 0, days = 0;
+  for (const w of weeks()) {
+    if (isGap(w) || !w.tasks?.length) continue;
+    const hrs  = w.tasks.reduce((s, x) => s + (x.h || 0), 0);
+    const span = daysBetween(w.start, w.end) + 1;
+    planned += hrs; days += span;
+    done += w.tasks.filter(x => getVal('tasks', x.id, false)).reduce((s, x) => s + (x.h || 0), 0);
+    if (w.end < t) expected += hrs;
+    else if (w.start <= t) expected += hrs * (daysBetween(w.start, t) + 1) / span;
+  }
+  const rate = days ? planned / days : 1;           // planned hours per calendar day
+  const dd   = (done - expected) / rate;             // +ahead / −behind, in days
+  const cls  = Math.abs(dd) < 1 ? 'ok' : dd < 0 ? 'behind' : 'ahead';
+  return { dd, cls, done, expected, label: cls === 'ok' ? 'on track' : `${Math.abs(dd).toFixed(1)}d ${cls}` };
+}
+
+/** Minutes logged on a local date, corrections included. */
+const loggedOn = iso => state.logs
+  .filter(l => localISO(l.start) === iso).reduce((s, l) => s + l.mins, 0);
+
+/** Mon..Sun of the current calendar week — did you show up each day?
+ *  Not a streak counter; just visible consistency. */
+function weekDots() {
+  const d = new Date(); const dow = (d.getDay() + 6) % 7;         // 0 = Mon
+  const mon = new Date(d); mon.setDate(d.getDate() - dow);
+  return [...Array(7)].map((_, i) => {
+    const day = new Date(mon); day.setDate(mon.getDate() + i);
+    const iso = localISO(day);
+    return { iso, on: loggedOn(iso) > 0, today: i === dow, future: i > dow };
+  });
+}
+
+/** One past self-check to re-read today. Prefers ones you've answered and
+ *  rotates daily — spaced recall without a spaced-recall system. */
+function recallPick() {
+  const cur  = todayWeek();
+  const past = weeks().filter(w => !isGap(w) && w.n < cur.n && w.checkpoint);
+  if (!past.length) return null;
+  const answered = past.filter(w => getVal('notes', w.id + '.check', ''));
+  const pool = answered.length ? answered : past;
+  return pool[Math.floor(Date.now() / 86400000) % pool.length];
+}
+
+/** Today's block of a week — or, if it's fully ticked, the next block with
+ *  anything left, flagged so the strip can say you're ahead. */
+function todayBlock(w) {
+  const groups = byDay(w);
+  const slot = todaySlot();
+  const i = groups.findIndex(g => slot >= g.d && slot <= g.end);
+  const open = g => g.ts.some(t => !getVal('tasks', t.id, false));
+  if (i >= 0 && open(groups[i])) return { g: groups[i], ahead: false };
+  const next = groups.slice(Math.max(i, 0)).find(open) || groups.find(open);
+  return next ? { g: next, ahead: true } : null;
+}
+
+/** Debounced autosave of one field into the notes bucket. */
+function wireField(el, key, after) {
+  if (!el) return;
+  let t;
+  el.oninput = () => {
+    clearTimeout(t);
+    t = setTimeout(() => { setVal('notes', key, el.value); after?.(); }, 500);
+  };
+}
+
+const wn = w => 'W' + String(w.n).padStart(2, '0');
+
 /* ── rendering: sidebar ────────────────────────────────────────────── */
 
 function renderSidebar() {
@@ -171,11 +253,13 @@ function renderSidebar() {
         + (done ? ' done' : '')
         + (isGap(w) ? ' gap' : '')
         + (locked(w) ? ' locked' : '')
+        + (w.milestone ? ' milestone' : '')
         + (w.id === today.id ? ' now' : '')
         + (w.id === current ? ' sel' : '');
       el.innerHTML =
-        `<span class="wk-n">${isGap(w) ? '––' : 'W' + String(w.n).padStart(2, '0')}</span>` +
-        `<span class="wk-t">${locked(w) ? '🔒 ' : ''}${esc(w.title)}</span>` +
+        `<span class="wk-n">${isGap(w) ? '––' : wn(w)}</span>` +
+        `<span class="wk-t">${locked(w) ? '🔒 ' : ''}${esc(w.title)}` +
+          `${w.milestone ? `<span class="ms" title="${esc(w.milestone)}">★</span>` : ''}</span>` +
         `<span class="wk-badge${done ? ' ok' : ''}">${isGap(w) ? '' : done ? '✓' : p + '%'}</span>`;
       el.onclick = () => select(w.id);
       list.appendChild(el);
@@ -239,6 +323,7 @@ function renderWeek(w) {
   const tags = [
     w.id === today.id ? '<span class="tag now">◀ current</span>' : '',
     isGap(w) ? '<span class="tag gap">parked</span>' : '',
+    w.milestone ? `<span class="tag ms">★ ${esc(w.milestone)}</span>` : '',
     p === 100 && !isGap(w) ? '<span class="tag done">complete</span>' : '',
   ].join(' ');
 
@@ -269,8 +354,14 @@ function renderWeek(w) {
   <p class="dim small">Days are a suggested split of this week's hours, not a rule — the order is
   what matters. Slipping a day just shifts the rest along.</p>` : ''}
 
-  ${w.deliverable ? `<div class="deliv">${esc(w.deliverable)}</div>` : ''}
-  ${w.checkpoint ? `<div class="check">${esc(w.checkpoint)}</div>` : ''}
+  ${w.deliverable ? `<div class="deliv">${esc(w.deliverable)}
+    <input id="ship" placeholder="link to what you shipped — repo, commit, screenshot, live URL"
+           value="${esc(getVal('notes', w.id + '.ship', ''))}">
+    <span class="ship-link" id="ship-link"></span></div>` : ''}
+  ${w.checkpoint ? `<div class="check">${esc(w.checkpoint)}
+    <div class="ans-hd"><span>YOUR ANSWER · resurfaces in the tonight strip</span><span>autosaved</span></div>
+    <textarea id="answer" spellcheck="false"
+      placeholder="answer in your own words, as if to an interviewer">${esc(getVal('notes', w.id + '.check', ''))}</textarea></div>` : ''}
 
   ${(w.resources || []).some(r => !r.task) ? `
   <h3>background · anytime, no laptop needed</h3>
@@ -291,8 +382,8 @@ function renderWeek(w) {
 
   <h3>time log · ${fmtH(minsFor(w.id))} of ${w.hours}h</h3>
   <div class="timer">
-    <span class="clock" id="clock">00:00:00</span>
-    <button class="btn" id="btn-timer">start</button>
+    <span class="clock" data-clock="${w.id}">00:00:00</span>
+    <button class="btn" data-timerbtn="${w.id}">start</button>
     <input type="number" id="man-mins" min="-900" max="900" step="5" placeholder="±min">
     <button class="btn" id="btn-add-log">log</button>
     <span class="dim small">negative subtracts — use it to correct an over-log</span>
@@ -314,8 +405,157 @@ function renderWeek(w) {
   </div>
 </div>`;
 
-  $('#main').innerHTML = html;
+  $('#pane').innerHTML = html;
   wireWeek(w);
+}
+
+/* ── tonight strip ──────────────────────────────────────────────────── */
+
+function renderTonight() {
+  const box = $('#tonight'); if (!box) return;
+  const w = todayWeek();
+  const collapsed = localStorage.getItem('mrd.tn') === '0';
+  const dateStr = new Date().toLocaleDateString('en-GB',
+    { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+  const dots = weekDots().map(x => `<span class="dot${x.on ? ' on' : ''}${x.today ? ' today' : ''}${x.future ? ' future' : ''}"
+    title="${x.iso}${x.on ? ' · ' + fmtH(loggedOn(x.iso)) : ''}"></span>`).join('');
+
+  let body;
+  if (isGap(w)) {
+    body = `<div class="tn-empty">parked — nothing scheduled this week. ${w.n === 12
+      ? 'The re-entry ramp is in the pane below.' : 'Protect the pause; it is part of the plan.'}</div>`;
+  } else {
+    const blk = todayBlock(w);
+    if (!blk) {
+      body = `<div class="tn-empty">✓ every task this week is ticked. Write the week note, then rest.</div>`;
+    } else {
+      const { g, ahead } = blk;
+      const planned = g.ts.reduce((s, t) => s + (t.h || 0), 0);
+      body = `
+        ${ahead ? `<span class="tn-next">today's block is done — next up · ${esc(g.label)}</span>` : ''}
+        ${g.ts.map(t => `
+        <div class="task ${getVal('tasks', t.id, false) ? 'done' : ''}">
+          <input type="checkbox" class="tn-chk" data-tid="${t.id}" ${getVal('tasks', t.id, false) ? 'checked' : ''}>
+          <label>${esc(t.t)}</label>
+          <span class="h">${t.h ? t.h + 'h' : ''}</span><span></span>
+        </div>`).join('')}
+        <div class="tn-foot">
+          <span class="clock" data-clock="${w.id}">00:00:00</span>
+          <button class="btn btn-sm" data-timerbtn="${w.id}">start</button>
+          <span>${round1(planned)}h planned · ${fmtH(loggedOn(localISO()))} logged today</span>
+          <a class="tn-go" href="#${w.id}">open week ›</a>
+        </div>`;
+    }
+  }
+
+  const rc = recallPick();
+  const ans = rc ? getVal('notes', rc.id + '.check', '') : '';
+  const recall = rc ? `
+    <div class="recall">
+      <span class="rc-tag">$ recall --from ${rc.id}</span>
+      <div class="rc-q">${esc(rc.checkpoint)}</div>
+      ${ans
+        ? `<button class="btn btn-sm" id="rc-reveal">show my answer</button><div class="rc-a hidden" id="rc-a">${esc(ans)}</div>`
+        : `<span class="dim small">unanswered — <a href="#${rc.id}">write one</a> and it comes back here</span>`}
+    </div>`
+    : `<div class="recall"><span class="rc-tag">$ recall</span>
+       <div class="rc-q dim">from week 1, a past self-check resurfaces here each day — spaced recall</div></div>`;
+
+  box.innerHTML = `
+  <div class="tonight${collapsed ? ' collapsed' : ''}">
+    <div class="tn-head">
+      <span class="prompt">$ tonight</span>
+      <span class="tn-meta">${dateStr} · ${isGap(w) ? 'PARKED' : wn(w)} <b>${esc(w.title)}</b></span>
+      <span class="dots" title="days you logged time this week">${dots}</span>
+      <button class="btn btn-sm" id="tn-toggle">${collapsed ? 'expand' : 'collapse'}</button>
+    </div>
+    <div class="tn-body">${body}${recall}</div>
+  </div>`;
+
+  $('#tn-toggle').onclick = () => { localStorage.setItem('mrd.tn', collapsed ? '1' : '0'); renderTonight(); };
+  $$('.tn-chk').forEach(cb => cb.onchange = () => {
+    setVal('tasks', cb.dataset.tid, cb.checked);
+    if (current === w.id) renderWeek(w);            // keep the pane's copy honest
+    renderSidebar(); renderHud(); renderTonight();
+  });
+  const rv = $('#rc-reveal');
+  if (rv) rv.onclick = () => { $('#rc-a').classList.remove('hidden'); rv.remove(); };
+  startClock();
+}
+
+/* ── notebook: every note, answer and shipped link, searchable ──────── */
+
+let nbQuery = '';
+
+function renderNotes() {
+  const ql  = nbQuery.trim().toLowerCase();
+  const hit = (...ss) => !ql || ss.some(s => (s || '').toLowerCase().includes(ql));
+  const re  = ql ? new RegExp(ql.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi') : null;
+  const mk  = s => re ? esc(s).replace(re, m => `<mark>${m}</mark>`) : esc(s);
+
+  const ships = [], rows = [];
+  for (const w of weeks()) {
+    const ship = getVal('notes', w.id + '.ship', '').trim();
+    const ans  = getVal('notes', w.id + '.check', '');
+    const note = getVal('notes', w.id, '');
+    if (ship) ships.push({ w, ship });
+    const items = [];
+    if (ans  && hit(ans, w.checkpoint)) items.push({ k: 'answer', q: w.checkpoint, v: ans });
+    if (note && hit(note))              items.push({ k: 'week', v: note });
+    for (const t of w.tasks || []) {
+      const v = getVal('notes', t.id, '');
+      if (v && hit(v, t.t)) items.push({ k: 'task', q: t.t, v });
+    }
+    if (items.length) rows.push({ w, items });
+  }
+  const n = rows.reduce((s, r) => s + r.items.length, 0);
+
+  $('#pane').innerHTML = `
+<div class="pane">
+  <div class="rule">${'─'.repeat(120)}</div>
+  <div class="wk-head"><h1>notebook</h1></div>
+  <input class="nb-search" id="nb-q" value="${esc(nbQuery)}"
+         placeholder="$ grep -i …   searches notes, answers and task text">
+
+  <h3>ship log · ${ships.length} linked</h3>
+  ${ships.length ? ships.map(({ w, ship }) => `
+    <div class="ship-row">
+      <span class="wn">${wn(w)}</span>
+      <span><a href="${esc(ship)}" target="_blank" rel="noopener">${esc(ship.replace(/^https?:\/\//, ''))}</a>
+        <span class="dl">${esc(w.deliverable)}</span></span>
+    </div>`).join('')
+    : `<p class="dim small">Nothing linked yet. Every week's deliverable has a link field — paste the repo,
+       commit or screenshot there and this list becomes your portfolio index.</p>`}
+
+  <h3>notes · ${n} entr${n === 1 ? 'y' : 'ies'}${ql ? ` matching "${esc(nbQuery)}"` : ''}</h3>
+  ${rows.length ? rows.map(({ w, items }) => `
+    <div class="nb-week">
+      <h4><a href="#${w.id}">${wn(w)} · ${esc(w.title)}</a></h4>
+      ${items.map(it => `
+      <div class="nb-item">
+        <span class="nb-k ${it.k}">${it.k}</span>
+        <span>${it.q ? `<div class="nb-q">${mk(it.q)}</div>` : ''}<div class="nb-v">${mk(it.v)}</div></span>
+      </div>`).join('')}
+    </div>`).join('')
+    : `<p class="dim small">${ql ? 'no matches'
+       : 'Nothing yet. The ✎ on any task, the self-check answer box and the week note all land here.'}</p>`}
+</div>`;
+
+  const q = $('#nb-q'); let t;
+  q.oninput = () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const pos = q.selectionStart; nbQuery = q.value; renderNotes();
+      const q2 = $('#nb-q'); q2.focus(); q2.setSelectionRange(pos, pos);
+    }, 250);
+  };
+}
+
+function renderShipLink(w) {
+  const el = $('#ship-link'); if (!el) return;
+  const v = getVal('notes', w.id + '.ship', '').trim();
+  el.innerHTML = /^https?:\/\//i.test(v)
+    ? `<a href="${esc(v)}" target="_blank" rel="noopener">↗ ${esc(v.replace(/^https?:\/\//, ''))}</a>` : '';
 }
 
 /* ── events for the current week ───────────────────────────────────── */
@@ -343,11 +583,18 @@ function wireWeek(w) {
   });
 
   $$('#tasks .task input').forEach(cb => cb.onchange = () => {
+    const next = weeks().find(x => x.n > w.n && !isGap(x));
+    const wasLocked = next ? locked(next) : false;
     setVal('tasks', cb.id, cb.checked);
     cb.closest('.task').classList.toggle('done', cb.checked);
-    $(`#tasks`).previousElementSibling.textContent =
-      `tasks · ${w.tasks.filter(t => getVal('tasks', t.id, false)).length}/${w.tasks.length} · ${pct(w)}%`;
-    renderSidebar(); renderHud();
+    $('#tasks').previousElementSibling.textContent =
+      `plan · ${w.tasks.filter(t => getVal('tasks', t.id, false)).length}/${w.tasks.length} · ${pct(w)}%`;
+    // small rewards at the two moments that matter
+    if (cb.checked && !isGap(w) && pct(w) === 100)
+      toast(`${wn(w)} complete — write the one-line takeaway in the week note`);
+    else if (next && wasLocked && !locked(next))
+      toast(`${wn(next)} unlocked`);
+    renderSidebar(); renderHud(); renderTonight();
   });
 
   const nb = $('#notes'); let nt;
@@ -368,7 +615,11 @@ function wireWeek(w) {
   const unlock = $('#btn-unlock');
   if (unlock) unlock.onclick = () => { setVal('unlocked', w.id, true); select(w.id); renderSidebar(); };
 
-  $('#btn-timer').onclick = () => toggleTimer(w.id);
+  // shipped link + self-check answer, both keyed off the week id
+  wireField($('#ship'), w.id + '.ship', () => renderShipLink(w));
+  wireField($('#answer'), w.id + '.check');
+  renderShipLink(w);
+
   $('#btn-add-log').onclick = () => {
     const m = parseInt($('#man-mins').value, 10);
     if (!m) return toast('enter minutes — negative to subtract', true);
@@ -399,10 +650,7 @@ function toggleTimer(weekId) {
     state.timer = { week: weekId, startedAt: now() };
     saveState({ sync: false });
   }
-  const w = weekById(weekId);
-  $('#btn-timer').textContent = state.timer ? 'stop' : 'start';
-  $('#btn-timer').classList.toggle('on', !!state.timer);
-  renderLogs(w); startClock();
+  renderLogs(weekById(weekId)); startClock(); renderTonight();
 }
 
 function addLog(weekId, start, mins) {
@@ -410,23 +658,29 @@ function addLog(weekId, start, mins) {
   const id = `${weekId}-${start}-${Math.random().toString(36).slice(2, 7)}`;
   state.logs.push({ id, week: weekId, start, mins });
   saveState();
-  renderLogs(weekById(weekId)); renderHud();
+  renderLogs(weekById(weekId)); renderHud(); renderTonight();
 }
 
+/** Paints every clock / start-stop button on the page for whichever week
+ *  it's bound to — the strip and the pane can both show one. */
 function startClock() {
   clearInterval(tick);
-  const el = $('#clock'); if (!el) return;
-  const btn = $('#btn-timer');
-  const running = state.timer && state.timer.week === current;
-  if (btn) { btn.textContent = running ? 'stop' : 'start'; btn.classList.toggle('on', !!running); }
   const paint = () => {
-    const s = running ? Math.floor((now() - state.timer.startedAt) / 1000) : 0;
-    el.textContent = [s / 3600, (s % 3600) / 60, s % 60]
-      .map(x => String(Math.floor(x)).padStart(2, '0')).join(':');
-    el.classList.toggle('run', !!running);
+    $$('[data-clock]').forEach(el => {
+      const run = state.timer && state.timer.week === el.dataset.clock;
+      const s = run ? Math.floor((now() - state.timer.startedAt) / 1000) : 0;
+      el.textContent = [s / 3600, (s % 3600) / 60, s % 60]
+        .map(x => String(Math.floor(x)).padStart(2, '0')).join(':');
+      el.classList.toggle('run', !!run);
+    });
+    $$('[data-timerbtn]').forEach(b => {
+      const run = state.timer && state.timer.week === b.dataset.timerbtn;
+      b.textContent = run ? 'stop' : 'start';
+      b.classList.toggle('on', !!run);
+    });
   };
   paint();
-  if (running) tick = setInterval(paint, 1000);
+  if (state.timer) tick = setInterval(paint, 1000);
 }
 
 function renderLogs(w) {
@@ -466,6 +720,9 @@ function renderHud() {
   const t = todayWeek();
   $('#hud-week').textContent = isGap(t) ? 'parked' : `${t.n} / ${Math.max(...real.map(w => w.n))}`;
   $('#hud-hours').textContent = fmtH(totalMins());
+  const pc = pace(), pe = $('#hud-pace');
+  pe.textContent = pc.label; pe.className = pc.cls;
+  pe.title = `${pc.done.toFixed(1)}h ticked vs ${pc.expected.toFixed(1)}h expected by today`;
 }
 
 /* ── github sync ───────────────────────────────────────────────────── */
@@ -678,13 +935,19 @@ function toast(msg, isErr = false) {
 function select(id) {
   current = id;
   location.hash = id;
-  renderWeek(weekById(id));
+  if (id === 'notes') renderNotes(); else renderWeek(weekById(id));
   renderSidebar();
-  // only jump the viewport on mobile, where the sidebar sits above the pane
-  if (window.innerWidth <= 820) $('#main').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  $('.wk.sel')?.scrollIntoView({ block: 'nearest' });     // sidebar follows you
+  if (window.innerWidth <= 820) {
+    $('#sidebar').classList.add('collapsed');
+    $('#main').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
 }
 
-function render() { renderSidebar(); renderHud(); if (current) renderWeek(weekById(current)); }
+function render() {
+  renderSidebar(); renderHud(); renderTonight();
+  if (current === 'notes') renderNotes(); else if (current) renderWeek(weekById(current));
+}
 
 /** Curriculum is one file per chapter. Load the index, then every chapter
  *  in parallel, and flatten back into the shape the renderers expect. */
@@ -716,7 +979,7 @@ async function boot() {
   try {
     ROADMAP = await loadCurriculum();
   } catch (e) {
-    $('#main').innerHTML = `<div class="pane">
+    $('#pane').innerHTML = `<div class="pane">
       <h1>could not load the curriculum</h1>
       <p class="dim">Opening this file directly with <code>file://</code> blocks fetch. Serve it instead:</p>
       <div class="code"><pre><code>python3 -m http.server 8000
@@ -733,14 +996,29 @@ async function boot() {
   document.title = `${m.title} · W${todayWeek().n}`;
 
   wireSettings();
-  $('#btn-sync').onclick = () => ghReady() ? pull() : openSettings();
-  $('#btn-jump').onclick = () => select(todayWeek().id);
+  $('#btn-sync').onclick  = () => ghReady() ? pull() : openSettings();
+  $('#btn-jump').onclick  = () => select(todayWeek().id);
+  $('#btn-notes').onclick = () => select('notes');
+  $('#btn-weeks').onclick = () => $('#sidebar').classList.toggle('collapsed');
   $('#hide-done').onchange = renderSidebar;
 
+  // one listener covers every start/stop button, wherever it renders
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-timerbtn]');
+    if (b) toggleTimer(b.dataset.timerbtn);
+  });
+  // #w05 / #notes links inside the strip and notebook navigate in place
+  window.addEventListener('hashchange', () => {
+    const id = location.hash.slice(1);
+    if (id && id !== current && (id === 'notes' || weekById(id))) select(id);
+  });
+  if (window.innerWidth <= 820) $('#sidebar').classList.add('collapsed');
+
   current = (location.hash || '').replace('#', '') || todayWeek().id;
-  if (!weekById(current)) current = todayWeek().id;
+  if (current !== 'notes' && !weekById(current)) current = todayWeek().id;
 
   renderHud();
+  renderTonight();
   select(current);
   setSync(ghReady() ? 'ok' : 'local');
   if (ghReady()) pull({ quiet: true });
