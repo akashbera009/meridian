@@ -7,3 +7,6 @@ __pycache__/
 
 # local git identity for this workspace — machine config, not project content
 .gitconfig
+
+# local scratch — the roadmap embeds the code, the folder stays local
+example/
