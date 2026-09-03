@@ -13,6 +13,7 @@
   --green-d: #1c3a24;
   --amber:   #d29922;
   --cyan:    #4bb3c9;
+  --blue:    #5a9ded;
   --red:     #d9544f;
   --violet:  #a371f7;
   --mono: 'JetBrains Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -150,7 +151,12 @@ header{
   color:var(--dimmer); font-family:var(--mono); line-height:1.5;
 }
 .notebtn:hover{color:var(--green)}
-.notebtn.has{color:var(--amber)}
+.notebtn.has{color:var(--blue)}
+
+/* a task you've written a note on — thin blue rail down the whole block */
+.task.noted,.task-sub.noted{border-left:2px solid var(--blue); padding-left:6px}
+.task.noted{padding-left:6px}
+.task-sub.noted{padding-left:32px}
 
 /* resources + note attached to a task */
 .task-sub{padding:2px 8px 8px 34px; border-bottom:1px solid var(--line)}

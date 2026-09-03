@@ -15,16 +15,14 @@
    ------------------------------------------------------------------ */
 
 const LS_STATE = 'mrd.state';
-const LS_TOKEN = 'mrd.token';   // never leaves this browser, never synced
-const LS_GH    = 'mrd.gh';
 
-/** Carry over anything saved under the previous key namespace. */
+/** Carry over the old key namespace, and drop the GitHub-sync leftovers —
+ *  a PAT sitting in localStorage is worth clearing now that it's unused. */
 function migrateKeys() {
-  for (const [from, to] of [['aier.state', LS_STATE], ['aier.token', LS_TOKEN], ['aier.gh', LS_GH]]) {
-    const v = localStorage.getItem(from);
-    if (v !== null && localStorage.getItem(to) === null) localStorage.setItem(to, v);
-    localStorage.removeItem(from);
-  }
+  const old = localStorage.getItem('aier.state');
+  if (old !== null && localStorage.getItem(LS_STATE) === null) localStorage.setItem(LS_STATE, old);
+  ['aier.state', 'aier.token', 'aier.gh', 'mrd.token', 'mrd.gh']
+    .forEach(k => localStorage.removeItem(k));
 }
 
 let ROADMAP = null;
@@ -292,15 +290,16 @@ function taskRow(w, t) {
   const done = getVal('tasks', t.id, false);
   const note = getVal('notes', t.id, '');
   const res  = (w.resources || []).filter(r => r.task === t.id);
+  const noted = !!note.trim();
   return `
-  <div class="task ${done ? 'done' : ''}" data-tid="${t.id}">
+  <div class="task ${done ? 'done' : ''}${noted ? ' noted' : ''}" data-tid="${t.id}">
     <input type="checkbox" id="${t.id}" ${done ? 'checked' : ''}>
     <label for="${t.id}">${esc(t.t)}</label>
     <span class="h">${t.h ? t.h + 'h' : ''}</span>
     <button class="notebtn${note ? ' has' : ''}" data-note="${t.id}"
             title="${note ? 'edit note' : 'add note'}">✎</button>
   </div>
-  <div class="task-sub${res.length || note ? '' : ' bare'}">
+  <div class="task-sub${noted ? ' noted' : ''}${res.length || note ? '' : ' bare'}" data-subfor="${t.id}">
     ${res.map(r => {
       const read = r.role === 'primary';
       return `<div class="task-res">
@@ -577,8 +576,11 @@ function wireWeek(w) {
     ta.oninput = () => {
       clearTimeout(d);
       d = setTimeout(() => {
-        setVal('notes', ta.dataset.tid, ta.value);
-        $(`.notebtn[data-note="${ta.dataset.tid}"]`)?.classList.toggle('has', !!ta.value.trim());
+        const id = ta.dataset.tid, has = !!ta.value.trim();
+        setVal('notes', id, ta.value);
+        $(`.notebtn[data-note="${id}"]`)?.classList.toggle('has', has);
+        $(`.task[data-tid="${id}"]`)?.classList.toggle('noted', has);
+        $(`.task-sub[data-subfor="${id}"]`)?.classList.toggle('noted', has);
       }, 500);
     };
   });
@@ -726,113 +728,110 @@ function renderHud() {
   pe.title = `${pc.done.toFixed(1)}h ticked vs ${pc.expected.toFixed(1)}h expected by today`;
 }
 
-/* ── github sync ───────────────────────────────────────────────────── */
+/* ── firestore sync ────────────────────────────────────────────────── */
 
-/** Repo path of the progress file. The site is served FROM docs/, so the
- *  browser sees /data/progress.json while the API must write the repo
- *  path — docs/data/progress.json. Derived from the URL so it stays right
- *  whether Pages serves /docs or the repo root. */
-const DEFAULT_PATH = location.hostname.endsWith('github.io')
-  ? 'docs/data/progress.json' : 'data/progress.json';
+let uid = null;          // null until signed in
+let unwatch = null;      // detach the live listener on sign-out
 
-const ghCfg = () => { try { return JSON.parse(localStorage.getItem(LS_GH)) || {}; } catch { return {}; } };
-const ghToken = () => localStorage.getItem(LS_TOKEN) || '';
-const ghReady = () => { const c = ghCfg(); return !!(c.owner && c.repo && ghToken()); };
+const syncOn = () => !!(uid && window.FB);
 
-const b64enc = str => {
-  const bytes = new TextEncoder().encode(str);
-  return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
-};
-const b64dec = b64 => {
-  const bin = atob(b64.replace(/\s/g, ''));
-  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
-};
+const setSync = s => { const e = $('#sync-label'); if (e) e.textContent = syncOn() ? s : 'local'; };
 
-async function ghFetch(method, body) {
-  const c = ghCfg();
-  const path = c.path || DEFAULT_PATH;
-  const url = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${path}`
-            + (method === 'GET' ? `?ref=${c.branch || 'main'}` : '');
-  const res = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${ghToken()}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (method === 'GET' && res.status === 404) return null;   // first push
-  if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 160)}`);
-  return res.json();
-}
-
+/** Pull once and merge. Runs on sign-in, and behind the ⇅ button. */
 async function pull({ quiet = false } = {}) {
-  if (!ghReady()) return quiet || toast('configure GitHub first (⚙)', true);
+  if (!syncOn()) return quiet || toast('sign in first (⚙)', true);
   try {
     setSync('…');
-    const f = await ghFetch('GET');
-    if (!f) { setSync('new'); return quiet || toast('no file at ' + (ghCfg().path || DEFAULT_PATH) + ' — push to create it'); }
-    const remote = JSON.parse(b64dec(f.content));
-    state = merge(state, remote);
-    saveState({ sync: false });
-    render(); setSync('ok');
-    if (!quiet) toast('pulled + merged');
+    const remote = await window.FB.load(uid);
+    if (remote) { state = merge(state, remote); saveState({ sync: false }); render(); }
+    setSync('sync');
+    if (!quiet) toast(remote ? 'pulled + merged' : 'nothing saved yet — this device is the first');
   } catch (e) { setSync('err'); toast(explain(e), true); }
 }
 
+/** Merge-then-write, so a device that was offline can't clobber the others. */
 async function push() {
-  if (!ghReady()) return toast('configure GitHub first (⚙)', true);
+  if (!syncOn()) return false;
   try {
     setSync('…');
-    const existing = await ghFetch('GET');
-    let payload = state;
-    if (existing) payload = state = merge(state, JSON.parse(b64dec(existing.content)));
-    const { timer, ...clean } = payload;                    // timer is device-local
-    await ghFetch('PUT', {
-      message: `progress: ${new Date().toISOString().slice(0, 16)}`,
-      content: b64enc(JSON.stringify(clean, null, 2)),
-      branch: ghCfg().branch || 'main',
-      ...(existing ? { sha: existing.sha } : {}),
-    });
+    const remote = await window.FB.load(uid);
+    if (remote) state = merge(state, remote);
+    const { timer, ...clean } = state;          // timer is device-local, never synced
+    await window.FB.save(uid, clean);
     saveState({ sync: false });
-    setSync('ok');
+    setSync('sync');
     return true;
-  } catch (e) {
-    setSync('err');
-    toast(explain(e), true);
-    return false;
-  }
+  } catch (e) { setSync('err'); toast(explain(e), true); return false; }
 }
 
-/** Turn a raw API error into something actionable. */
 function explain(e) {
-  const m = String(e.message || e);
-  if (m.startsWith('401')) return 'token rejected — expired, or from the wrong GitHub account';
-  if (m.startsWith('403')) return 'token lacks permission — needs Contents: Read and write on this repo';
-  if (m.startsWith('404')) return 'not found — check owner/repo, and that path starts with docs/';
-  if (m.startsWith('409') || m.startsWith('422')) return 'conflict — pull remote first, then push';
-  return 'sync failed: ' + m.slice(0, 120);
+  const c = String(e?.code || e?.message || e);
+  if (c.includes('permission-denied')) return 'permission denied — check the Firestore rules';
+  if (c.includes('unavailable') || c.includes('network')) return 'offline — saved locally, will retry';
+  if (c.includes('popup-blocked')) return 'popup blocked — allow popups, or try again';
+  if (c.includes('unauthorized-domain')) return 'this domain is not authorized in Firebase Auth';
+  return 'sync failed: ' + c.slice(0, 120);
 }
 
 function schedulePush() {
-  if (!ghReady()) return;
+  if (!syncOn()) return;
   clearTimeout(pushTimer);
   setSync('•');
-  pushTimer = setTimeout(push, 4000);   // debounce: don't commit on every keystroke
+  pushTimer = setTimeout(push, 3000);   // debounce: don't write on every keystroke
 }
 
-const setSync = s => { const e = $('#sync-label'); if (e) e.textContent = ghReady() ? s : 'local'; };
+/** Wire auth once Firebase has loaded. Signed in: pull, then listen for
+ *  changes from your other devices. Signed out: local only, nothing lost. */
+function initSync() {
+  if (!window.FB) return;
+  window.FB.onAuth(async user => {
+    unwatch?.(); unwatch = null;
+    uid = user?.uid || null;
+    renderAccount();
+    if (!uid) { setSync('local'); return; }
+    await pull({ quiet: true });
+    await push();                                    // seed the doc on first sign-in
+    unwatch = window.FB.watch(uid, remote => {       // live: another device wrote
+      const before = JSON.stringify(state);
+      state = merge(state, remote);
+      if (JSON.stringify(state) !== before) { saveState({ sync: false }); render(); }
+    });
+  });
+}
+
+/** The account block inside ⚙. */
+function renderAccount() {
+  const box = $('#account'); if (!box) return;
+  const u = window.FB?.user();
+  box.innerHTML = !window.FB
+    ? `<p class="dim small">Firebase is still loading…</p>`
+    : u
+    ? `<p class="dim small">Signed in as <b>${esc(u.email || u.uid)}</b>. Progress syncs to your
+         private Firestore document and updates live on your other devices.</p>
+       <div class="row">
+         <button class="btn" id="btn-signout">sign out</button>
+         <button class="btn" id="btn-pull">pull now</button>
+         <button class="btn" id="btn-push">push now</button>
+       </div>`
+    : `<p class="dim small">Progress saves to this browser instantly. Sign in to sync it across
+         your devices — your data is private to your account, and nothing goes into the repo.</p>
+       <div class="row"><button class="btn" id="btn-signin">sign in with Google</button></div>`;
+
+  $('#btn-signin') && ($('#btn-signin').onclick = async () => {
+    try { await window.FB.signIn(); } catch (e) { toast(explain(e), true); }
+  });
+  $('#btn-signout') && ($('#btn-signout').onclick = async () => {
+    await window.FB.signOut();
+    toast('signed out — this browser keeps its own copy');
+  });
+  $('#btn-pull') && ($('#btn-pull').onclick = () => pull());
+  $('#btn-push') && ($('#btn-push').onclick = () => push().then(ok => ok && toast('pushed')));
+}
 
 /* ── settings modal ────────────────────────────────────────────────── */
 
 function openSettings() {
-  const c = ghCfg();
-  $('#gh-owner').value  = c.owner  || '';
-  $('#gh-repo').value   = c.repo   || slug();
-  $('#gh-branch').value = c.branch || 'main';
-  $('#gh-path').value   = c.path   || DEFAULT_PATH;
-  $('#gh-token').value  = ghToken();
+  renderAccount();
   $('#modal').classList.remove('hidden');
 }
 
@@ -843,36 +842,6 @@ function wireSettings() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') $('#modal').classList.add('hidden');
   });
-
-  /** Persist whatever is currently typed in the form. Returns false and
-   *  says what's missing rather than letting a later call fail vaguely. */
-  function saveGh({ quiet = false } = {}) {
-    const owner = $('#gh-owner').value.trim();
-    const repo  = $('#gh-repo').value.trim();
-    const token = $('#gh-token').value.trim();
-    const missing = [
-      !owner && 'owner', !repo && 'repo', !token && 'token',
-    ].filter(Boolean);
-    if (missing.length) { toast('fill in: ' + missing.join(', '), true); return false; }
-
-    localStorage.setItem(LS_GH, JSON.stringify({
-      owner, repo,
-      branch: $('#gh-branch').value.trim() || 'main',
-      path:   $('#gh-path').value.trim() || DEFAULT_PATH,
-    }));
-    localStorage.setItem(LS_TOKEN, token);
-    setSync('ok');
-    if (!quiet) toast('saved — try "pull remote"');
-    return true;
-  }
-
-  $('#btn-save-gh').onclick = () => saveGh();
-  // pull/push save the form first, so a filled-in but unsaved form just works
-  $('#btn-pull').onclick = () => { if (saveGh({ quiet: true })) pull(); };
-  $('#btn-push').onclick = () => {
-    if (!saveGh({ quiet: true })) return;
-    push().then(ok => { if (ok) toast('pushed to ' + ghCfg().path); });
-  };
 
   $('#btn-export').onclick = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -999,7 +968,9 @@ async function boot() {
   document.title = `${m.title} · W${todayWeek().n}`;
 
   wireSettings();
-  $('#btn-sync').onclick  = () => ghReady() ? pull() : openSettings();
+  // Firebase is a module, so it may resolve before or after this runs
+  if (window.FB) initSync(); else window.addEventListener('fb-ready', initSync, { once: true });
+  $('#btn-sync').onclick  = () => syncOn() ? pull() : openSettings();
   $('#btn-jump').onclick  = () => select(todayWeek().id);
   // toggle: open the notebook, or click again to go back to where you were
   $('#btn-notes').onclick = () => select(current === 'notes' ? (lastWeek || todayWeek().id) : 'notes');
@@ -1024,8 +995,7 @@ async function boot() {
   renderHud();
   renderTonight();
   select(current);
-  setSync(ghReady() ? 'ok' : 'local');
-  if (ghReady()) pull({ quiet: true });
+  setSync('local');
 }
 
 boot();

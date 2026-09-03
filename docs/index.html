@@ -53,26 +53,8 @@
     <div class="modal-head"><span>── settings ──</span><button class="btn btn-sm" id="btn-close">esc</button></div>
     <div class="modal-body">
 
-      <h3>storage</h3>
-      <p class="dim small">Progress always saves to this browser instantly. Add a GitHub token to also sync it to your repo so every device sees the same state.</p>
-
-      <label class="fld"><span>owner</span><input id="gh-owner" placeholder="your-github-username"></label>
-      <label class="fld"><span>repo</span><input id="gh-repo" placeholder="meridian"></label>
-      <label class="fld"><span>branch</span><input id="gh-branch" placeholder="main"></label>
-      <label class="fld"><span>path</span><input id="gh-path" placeholder="docs/data/progress.json"></label>
-      <label class="fld"><span>token</span><input id="gh-token" type="password" placeholder="github_pat_…"></label>
-
-      <p class="dim small">
-        Create at <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Developer settings → Fine-grained tokens</a>.
-        Scope it to <b>this one repo</b> with <b>Contents: Read and write</b>. Nothing else.
-        The token is stored only in this browser's localStorage and is never written into the repo.
-      </p>
-
-      <div class="row">
-        <button class="btn" id="btn-save-gh">save</button>
-        <button class="btn" id="btn-pull">pull remote</button>
-        <button class="btn" id="btn-push">push local</button>
-      </div>
+      <h3>account</h3>
+      <div id="account"><p class="dim small">Firebase is still loading…</p></div>
 
       <h3>local backup</h3>
       <div class="row">
@@ -92,5 +74,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="assets/app.js"></script>
+<script type="module" src="firebase.js"></script>
 </body>
 </html>
