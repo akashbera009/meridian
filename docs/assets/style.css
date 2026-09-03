@@ -153,10 +153,27 @@ header{
 .notebtn:hover{color:var(--green)}
 .notebtn.has{color:var(--blue)}
 
+/* ── one visual language: BLUE means "you wrote something here" ──── */
+
 /* a task you've written a note on — thin blue rail down the whole block */
 .task.noted,.task-sub.noted{border-left:2px solid var(--blue); padding-left:6px}
 .task.noted{padding-left:6px}
 .task-sub.noted{padding-left:32px}
+
+/* any note field holding content: blue rail + brighter text, so written
+   notes read as content instead of blending into the placeholder grey */
+textarea.hasnote,input.hasnote{
+  border-left:2px solid var(--blue) !important;
+  color:#dbe3e9 !important;
+  background:#0b1116 !important;
+}
+
+/* sidebar / heading marker */
+.nmark{
+  color:var(--blue); margin-left:5px; font-size:11px; letter-spacing:.04em;
+  white-space:nowrap;
+}
+.wk.done .nmark{color:var(--blue); opacity:.75}
 
 /* resources + note attached to a task */
 .task-sub{padding:2px 8px 8px 34px; border-bottom:1px solid var(--line)}

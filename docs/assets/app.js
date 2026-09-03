@@ -215,14 +215,36 @@ function todayBlock(w) {
   return next ? { g: next, ahead: true } : null;
 }
 
-/** Debounced autosave of one field into the notes bucket. */
+/** Debounced autosave of one field into the notes bucket. Also keeps the
+ *  "you wrote something here" marker in step as you type. */
 function wireField(el, key, after) {
   if (!el) return;
   let t;
   el.oninput = () => {
+    el.classList.toggle('hasnote', !!el.value.trim());
     clearTimeout(t);
     t = setTimeout(() => { setVal('notes', key, el.value); after?.(); }, 500);
   };
+}
+
+/** Repaint the two places a note count shows, without re-rendering the
+ *  pane — doing that on every keystroke would steal focus mid-sentence. */
+function refreshNoteMarkers(w) {
+  renderSidebar();
+  const h = $('#notes-h3');
+  if (!h) return;
+  const n = noteCount(w);
+  h.innerHTML = `notes${n ? ` · <span class="nmark">✎ ${n}</span> in this week` : ''}`;
+}
+
+/** How many notes a week holds — week note, self-check answer, task notes.
+ *  Drives the sidebar marker so you can see where your thinking lives. */
+function noteCount(w) {
+  let n = 0;
+  if (getVal('notes', w.id, '').trim()) n++;
+  if (getVal('notes', w.id + '.check', '').trim()) n++;
+  for (const t of w.tasks || []) if (getVal('notes', t.id, '').trim()) n++;
+  return n;
 }
 
 const wn = w => 'W' + String(w.n).padStart(2, '0');
@@ -255,10 +277,12 @@ function renderSidebar() {
         + (w.milestone ? ' milestone' : '')
         + (w.id === today.id ? ' now' : '')
         + (w.id === current ? ' sel' : '');
+      const nn = noteCount(w);
       el.innerHTML =
         `<span class="wk-n">${isGap(w) ? '––' : wn(w)}</span>` +
         `<span class="wk-t">${locked(w) ? '🔒 ' : ''}${esc(w.title)}` +
-          `${w.milestone ? `<span class="ms" title="${esc(w.milestone)}">★</span>` : ''}</span>` +
+          `${w.milestone ? `<span class="ms" title="${esc(w.milestone)}">★</span>` : ''}` +
+          `${nn ? `<span class="nmark" title="${nn} note${nn > 1 ? 's' : ''}">✎${nn > 1 ? nn : ''}</span>` : ''}</span>` +
         `<span class="wk-badge${done ? ' ok' : ''}">${isGap(w) ? '' : done ? '✓' : p + '%'}</span>`;
       el.onclick = () => select(w.id);
       list.appendChild(el);
@@ -362,7 +386,7 @@ function renderWeek(w) {
     <span class="ship-link" id="ship-link"></span></div>` : ''}
   ${w.checkpoint ? `<div class="check">${esc(w.checkpoint)}
     <div class="ans-hd"><span>YOUR ANSWER · resurfaces in the tonight strip</span><span>autosaved</span></div>
-    <textarea id="answer" spellcheck="false"
+    <textarea id="answer" spellcheck="false" class="${getVal('notes', w.id + '.check', '').trim() ? 'hasnote' : ''}"
       placeholder="answer in your own words, as if to an interviewer">${esc(getVal('notes', w.id + '.check', ''))}</textarea></div>` : ''}
 
   ${(w.resources || []).some(r => !r.task) ? `
@@ -393,14 +417,15 @@ function renderWeek(w) {
   <div class="hbar"><i id="hbar" style="width:0"></i></div>
   <div class="logs" id="logs"></div>
 
-  <h3>notes</h3>
+  <h3 id="notes-h3">notes${noteCount(w) ? ` · <span class="nmark">✎ ${noteCount(w)}</span> in this week` : ''}</h3>
   <div class="notes-hd">
     <span class="dim small">markdown, autosaved</span>
     <span><span class="saved hidden" id="saved">saved ✓</span>
       <button class="expand sm" data-key="${w.id}" data-t="${esc(wn(w) + ' · week note')}"
               title="Open in the full editor">⤢ expand</button></span>
   </div>
-  <textarea id="notes" spellcheck="false" placeholder="$ what clicked, what broke, links, numbers…">${esc(getVal('notes', w.id, ''))}</textarea>
+  <textarea id="notes" spellcheck="false" class="${getVal('notes', w.id, '').trim() ? 'hasnote' : ''}"
+    placeholder="$ what clicked, what broke, links, numbers…">${esc(getVal('notes', w.id, ''))}</textarea>
 
   <div class="rule" style="margin-top:26px">${'─'.repeat(120)}</div>
   <div class="row">
@@ -600,6 +625,7 @@ function wireWeek(w) {
         $(`.notebtn[data-note="${id}"]`)?.classList.toggle('has', has);
         $(`.task[data-tid="${id}"]`)?.classList.toggle('noted', has);
         $(`.task-sub[data-subfor="${id}"]`)?.classList.toggle('noted', has);
+        refreshNoteMarkers(w);
       }, 500);
     };
   });
@@ -621,11 +647,13 @@ function wireWeek(w) {
 
   const nb = $('#notes'); let nt;
   nb.oninput = () => {
+    nb.classList.toggle('hasnote', !!nb.value.trim());
     clearTimeout(nt);
     nt = setTimeout(() => {
       setVal('notes', w.id, nb.value);
       const s = $('#saved'); s.classList.remove('hidden');
       setTimeout(() => s.classList.add('hidden'), 1200);
+      refreshNoteMarkers(w);
     }, 500);
   };
 
@@ -642,7 +670,7 @@ function wireWeek(w) {
 
   // shipped link + self-check answer, both keyed off the week id
   wireField($('#ship'), w.id + '.ship', () => renderShipLink(w));
-  wireField($('#answer'), w.id + '.check');
+  wireField($('#answer'), w.id + '.check', () => refreshNoteMarkers(w));
   renderShipLink(w);
 
   $('#btn-add-log').onclick = () => {
