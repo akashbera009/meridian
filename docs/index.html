@@ -25,8 +25,7 @@
     <div class="hud-item"><label>LOGGED</label><span id="hud-hours">--</span></div>
     <button id="btn-weeks" class="btn mobile-only" title="Show week list">☰ weeks</button>
     <button id="btn-notes" class="btn" title="Every note, answer and shipped link in one place">⌕ notebook</button>
-    <button id="btn-sync" class="btn" title="Sync with GitHub">⇅ <span id="sync-label">local</span></button>
-    <button id="btn-settings" class="btn">⚙</button>
+    <button id="btn-account" class="btn" title="Sync status">⇅ <span id="sync-label">local</span></button>
   </div>
   <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
 </header>
@@ -48,25 +47,32 @@
   </main>
 </div>
 
-<div id="modal" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-head"><span>── settings ──</span><button class="btn btn-sm" id="btn-close">esc</button></div>
-    <div class="modal-body">
-
-      <h3>account</h3>
-      <div id="account"><p class="dim small">Firebase is still loading…</p></div>
-
-      <h3>local backup</h3>
-      <div class="row">
-        <button class="btn" id="btn-export">export json</button>
-        <label class="btn" for="import-file">import json</label>
-        <input type="file" id="import-file" accept=".json" hidden>
-      </div>
-
-      <h3>danger</h3>
-      <div class="row"><button class="btn btn-danger" id="btn-reset">reset all progress</button></div>
-
-      <p class="dim small" id="settings-status"></p>
+<div id="editor" class="modal hidden">
+  <div class="ed-box">
+    <div class="ed-head">
+      <span class="prompt">$ vi</span>
+      <span class="ed-title" id="ed-title"></span>
+      <button class="btn btn-sm" id="ed-close">esc</button>
+    </div>
+    <div class="ed-tools" id="ed-tools">
+      <button class="tb" data-w="**|**"   title="Bold · ⌘B"><b>B</b></button>
+      <button class="tb" data-w="*|*"     title="Italic · ⌘I"><i>I</i></button>
+      <button class="tb" data-w="`|`"     title="Inline code">&lt;/&gt;</button>
+      <button class="tb" data-w="```\n|\n```" title="Code block">▤</button>
+      <button class="tb" data-p="## "     title="Heading">H</button>
+      <button class="tb" data-p="- "      title="Bullet list">•</button>
+      <button class="tb" data-p="&gt; "   title="Quote">❝</button>
+      <button class="tb" data-link="1"    title="Link · ⌘K">🔗</button>
+      <span class="ed-spacer"></span>
+      <button class="btn btn-sm" id="ed-split">preview</button>
+    </div>
+    <div class="ed-body" id="ed-body">
+      <textarea id="ed-text" spellcheck="false" placeholder="markdown — ⌘B bold, ⌘I italic, ⌘K link"></textarea>
+      <div class="ed-prev" id="ed-prev"></div>
+    </div>
+    <div class="ed-foot">
+      <span id="ed-status" class="dim">autosaved</span>
+      <span id="ed-count" class="dim"></span>
     </div>
   </div>
 </div>

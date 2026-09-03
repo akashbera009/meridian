@@ -313,6 +313,8 @@ function taskRow(w, t) {
     <div class="note-wrap${note ? '' : ' hidden'}" data-notefor="${t.id}">
       <textarea class="tnote" data-tid="${t.id}" spellcheck="false"
         placeholder="what broke · the number you got · what you'd do differently">${esc(note)}</textarea>
+      <button class="expand sm" data-key="${t.id}" data-t="${esc(wn(w) + ' · ' + t.t.slice(0, 46))}"
+              title="Open in the full editor">⤢ expand</button>
     </div>
   </div>`;
 }
@@ -394,7 +396,9 @@ function renderWeek(w) {
   <h3>notes</h3>
   <div class="notes-hd">
     <span class="dim small">markdown, autosaved</span>
-    <span class="saved hidden" id="saved">saved ✓</span>
+    <span><span class="saved hidden" id="saved">saved ✓</span>
+      <button class="expand sm" data-key="${w.id}" data-t="${esc(wn(w) + ' · week note')}"
+              title="Open in the full editor">⤢ expand</button></span>
   </div>
   <textarea id="notes" spellcheck="false" placeholder="$ what clicked, what broke, links, numbers…">${esc(getVal('notes', w.id, ''))}</textarea>
 
@@ -500,11 +504,11 @@ function renderNotes() {
     const note = getVal('notes', w.id, '');
     if (ship) ships.push({ w, ship });
     const items = [];
-    if (ans  && hit(ans, w.checkpoint)) items.push({ k: 'answer', q: w.checkpoint, v: ans });
-    if (note && hit(note))              items.push({ k: 'week', v: note });
+    if (ans  && hit(ans, w.checkpoint)) items.push({ k: 'answer', q: w.checkpoint, v: ans, key: w.id + '.check', t: `${wn(w)} · self-check` });
+    if (note && hit(note))              items.push({ k: 'week', v: note, key: w.id, t: `${wn(w)} · week note` });
     for (const t of w.tasks || []) {
       const v = getVal('notes', t.id, '');
-      if (v && hit(v, t.t)) items.push({ k: 'task', q: t.t, v });
+      if (v && hit(v, t.t)) items.push({ k: 'task', q: t.t, v, key: t.id, t: `${wn(w)} · ${t.t.slice(0, 46)}…` });
     }
     if (items.length) rows.push({ w, items });
   }
@@ -534,11 +538,23 @@ function renderNotes() {
       ${items.map(it => `
       <div class="nb-item">
         <span class="nb-k ${it.k}">${it.k}</span>
-        <span>${it.q ? `<div class="nb-q">${mk(it.q)}</div>` : ''}<div class="nb-v">${mk(it.v)}</div></span>
+        <span>${it.q ? `<div class="nb-q">${mk(it.q)}</div>` : ''}
+          <div class="nb-v">${ql ? mk(it.v) : md(it.v)}</div></span>
+        <button class="expand" data-key="${esc(it.key)}" data-t="${esc(it.t)}" title="Open in editor">⤢</button>
       </div>`).join('')}
     </div>`).join('')
     : `<p class="dim small">${ql ? 'no matches'
        : 'Nothing yet. The ✎ on any task, the self-check answer box and the week note all land here.'}</p>`}
+
+  <h3>data</h3>
+  <p class="dim small">Progress lives in this browser and, when you're signed in, in your private
+    Firestore document. Export is a plain JSON file you can keep or move to another browser.</p>
+  <div class="row">
+    <button class="btn" id="btn-export">export json</button>
+    <label class="btn" for="import-file">import json</label>
+    <input type="file" id="import-file" accept=".json" hidden>
+    <button class="btn btn-danger" id="btn-reset">reset all progress</button>
+  </div>
 </div>`;
 
   const q = $('#nb-q'); let t;
@@ -549,6 +565,9 @@ function renderNotes() {
       const q2 = $('#nb-q'); q2.focus(); q2.setSelectionRange(pos, pos);
     }, 250);
   };
+  $$('.expand').forEach(b => b.onclick = () =>
+    openEditor(b.dataset.key, b.dataset.t, renderNotes));
+  wireDataActions();
 }
 
 function renderShipLink(w) {
@@ -614,6 +633,9 @@ function wireWeek(w) {
     await navigator.clipboard.writeText(w.code[+b.dataset.i].body);
     b.textContent = 'copied'; setTimeout(() => b.textContent = 'copy', 1200);
   });
+
+  $$('.expand').forEach(b => b.onclick = () =>
+    openEditor(b.dataset.key, b.dataset.t, () => renderWeek(w)));
 
   const unlock = $('#btn-unlock');
   if (unlock) unlock.onclick = () => { setVal('unlocked', w.id, true); select(w.id); renderSidebar(); };
@@ -735,7 +757,11 @@ let unwatch = null;      // detach the live listener on sign-out
 
 const syncOn = () => !!(uid && window.FB);
 
-const setSync = s => { const e = $('#sync-label'); if (e) e.textContent = syncOn() ? s : 'local'; };
+const setSync = s => {
+  const e = $('#sync-label'); if (!e) return;
+  e.textContent = s;
+  $('#btn-account')?.classList.toggle('on', s === 'synced' || s === '•' || s === '…');
+};
 
 /** Pull once and merge. Runs on sign-in, and behind the ⇅ button. */
 async function pull({ quiet = false } = {}) {
@@ -799,55 +825,171 @@ function initSync() {
   });
 }
 
-/** The account block inside ⚙. */
+/** Header account button. Signed out it signs you in; signed in it shows
+ *  who you are and offers to sign out. Sync itself needs no button. */
 function renderAccount() {
-  const box = $('#account'); if (!box) return;
+  const b = $('#btn-account'); if (!b) return;
   const u = window.FB?.user();
-  box.innerHTML = !window.FB
-    ? `<p class="dim small">Firebase is still loading…</p>`
-    : u
-    ? `<p class="dim small">Signed in as <b>${esc(u.email || u.uid)}</b>. Progress syncs to your
-         private Firestore document and updates live on your other devices.</p>
-       <div class="row">
-         <button class="btn" id="btn-signout">sign out</button>
-         <button class="btn" id="btn-pull">pull now</button>
-         <button class="btn" id="btn-push">push now</button>
-       </div>`
-    : `<p class="dim small">Progress saves to this browser instantly. Sign in to sync it across
-         your devices — your data is private to your account, and nothing goes into the repo.</p>
-       <div class="row"><button class="btn" id="btn-signin">sign in with Google</button></div>`;
-
-  $('#btn-signin') && ($('#btn-signin').onclick = async () => {
-    try { await window.FB.signIn(); } catch (e) { toast(explain(e), true); }
-  });
-  $('#btn-signout') && ($('#btn-signout').onclick = async () => {
-    await window.FB.signOut();
-    toast('signed out — this browser keeps its own copy');
-  });
-  $('#btn-pull') && ($('#btn-pull').onclick = () => pull());
-  $('#btn-push') && ($('#btn-push').onclick = () => push().then(ok => ok && toast('pushed')));
+  if (u) {
+    b.title = `Synced as ${u.email || u.uid} — click to sign out`;
+    b.onclick = async () => {
+      if (!confirm(`Signed in as ${u.email || u.uid}.\n\nSign out? This browser keeps its own copy.`)) return;
+      await window.FB.signOut();
+      toast('signed out — this browser keeps its own copy');
+    };
+  } else {
+    b.title = window.FB ? 'Sign in to sync across your devices' : 'Loading…';
+    b.onclick = async () => {
+      if (!window.FB) return toast('still loading — try again in a second', true);
+      try { await window.FB.signIn(); } catch (e) { toast(explain(e), true); }
+    };
+  }
+  setSync(u ? 'synced' : 'local');
 }
 
-/* ── settings modal ────────────────────────────────────────────────── */
+/* ── markdown ──────────────────────────────────────────────────────── */
 
-function openSettings() {
-  renderAccount();
-  $('#modal').classList.remove('hidden');
+/** Small block-level markdown renderer. Input is escaped first, so nothing
+ *  a note contains can inject markup. Code spans and fences are stashed
+ *  before inline rules run, so `**` inside code stays literal. */
+function md(src) {
+  const stash = [];
+  const keep = html => ` ${stash.push(html) - 1} `;
+  let s = esc(src || '')
+    .replace(/```[^\n]*\n([\s\S]*?)```/g, (_, c) => keep(`<pre class="mdcode">${c.replace(/\n+$/, '')}</pre>`))
+    .replace(/`([^`\n]+)`/g, (_, c) => keep(`<code class="mdi">${c}</code>`));
+
+  const inline = t => t
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<i>$2</i>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+
+  const out = []; let list = null, para = [];
+  const flushP = () => { if (para.length) { out.push(`<p>${inline(para.join('<br>'))}</p>`); para = []; } };
+  const flushL = () => {
+    if (!list) return;
+    out.push(`<${list.t}>${list.items.map(i => `<li>${inline(i)}</li>`).join('')}</${list.t}>`);
+    list = null;
+  };
+
+  for (const line of s.split('\n')) {
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+\.\s+(.*)$/);
+    const bq = line.match(/^&gt;\s?(.*)$/);
+    if (h)       { flushP(); flushL(); const n = Math.min(6, h[1].length + 2); out.push(`<h${n} class="mdh">${inline(h[2])}</h${n}>`); }
+    else if (ul) { flushP(); if (list?.t !== 'ul') { flushL(); list = { t: 'ul', items: [] }; } list.items.push(ul[1]); }
+    else if (ol) { flushP(); if (list?.t !== 'ol') { flushL(); list = { t: 'ol', items: [] }; } list.items.push(ol[1]); }
+    else if (bq) { flushP(); flushL(); out.push(`<blockquote>${inline(bq[1])}</blockquote>`); }
+    else if (!line.trim())                    { flushP(); flushL(); }
+    else if (/^ \d+ $/.test(line.trim())) { flushP(); flushL(); out.push(line.trim()); }
+    else para.push(line);
+  }
+  flushP(); flushL();
+  return out.join('').replace(/ (\d+) /g, (_, i) => stash[+i]);
 }
 
-function wireSettings() {
-  $('#btn-settings').onclick = openSettings;
-  $('#btn-close').onclick = () => $('#modal').classList.add('hidden');
-  $('#modal').onclick = e => { if (e.target.id === 'modal') $('#modal').classList.add('hidden'); };
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') $('#modal').classList.add('hidden');
-  });
+/* ── full-screen note editor ───────────────────────────────────────── */
 
-  $('#btn-export').onclick = () => {
+let edKey = null, edSaveT = null, edAfter = null;
+
+/** Open the big editor on any note key. `after` re-renders whatever view
+ *  the note came from, so the blue rail and previews stay in step. */
+function openEditor(key, title, after) {
+  edKey = key; edAfter = after || null;
+  const ta = $('#ed-text');
+  $('#ed-title').textContent = title;
+  ta.value = getVal('notes', key, '');
+  $('#editor').classList.remove('hidden');
+  edPaint();
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+
+function closeEditor() {
+  if (!edKey) return;
+  clearTimeout(edSaveT); edSave();
+  $('#editor').classList.add('hidden');
+  const after = edAfter; edKey = null; edAfter = null;
+  after?.();
+}
+
+function edSave() {
+  if (!edKey) return;
+  setVal('notes', edKey, $('#ed-text').value);
+  $('#ed-status').textContent = 'saved ✓';
+  setTimeout(() => { if (edKey) $('#ed-status').textContent = 'autosaved'; }, 1200);
+}
+
+function edPaint() {
+  const v = $('#ed-text').value;
+  $('#ed-prev').innerHTML = md(v);
+  const words = v.trim() ? v.trim().split(/\s+/).length : 0;
+  $('#ed-count').textContent = `${words} word${words === 1 ? '' : 's'} · ${v.length} chars`;
+}
+
+/** Wrap the selection in `a|b`, or prefix each selected line. */
+function edApply({ wrap, prefix, link }) {
+  const ta = $('#ed-text');
+  const [s, e] = [ta.selectionStart, ta.selectionEnd];
+  const sel = ta.value.slice(s, e);
+  let text, caret;
+  if (link) {
+    const url = prompt('Link URL', 'https://');
+    if (!url) return;
+    text = `[${sel || 'text'}](${url})`; caret = s + text.length;
+  } else if (wrap) {
+    const [a, b] = wrap.replace(/\\n/g, '\n').split('|');
+    text = a + sel + b; caret = sel ? s + text.length : s + a.length;
+  } else {
+    const lines = (sel || '').split('\n');
+    text = lines.map(l => prefix + l).join('\n'); caret = s + text.length;
+  }
+  ta.setRangeText(text, s, e, 'end');
+  ta.selectionStart = ta.selectionEnd = caret;
+  ta.focus(); edPaint();
+  clearTimeout(edSaveT); edSaveT = setTimeout(edSave, 400);
+}
+
+function wireEditor() {
+  const ta = $('#ed-text');
+  $('#ed-close').onclick = closeEditor;
+  $('#editor').onclick = e => { if (e.target.id === 'editor') closeEditor(); };
+  $('#ed-split').onclick = () => {
+    const on = $('#ed-body').classList.toggle('split');
+    $('#ed-split').classList.toggle('on', on);
+    localStorage.setItem('mrd.split', on ? '1' : '0');
+    edPaint();
+  };
+  if (localStorage.getItem('mrd.split') === '1') {
+    $('#ed-body').classList.add('split'); $('#ed-split').classList.add('on');
+  }
+  $$('#ed-tools .tb').forEach(b => b.onclick = () =>
+    edApply({ wrap: b.dataset.w, prefix: b.dataset.p, link: b.dataset.link }));
+
+  ta.oninput = () => { edPaint(); clearTimeout(edSaveT); edSaveT = setTimeout(edSave, 400); };
+  ta.onkeydown = e => {
+    const meta = e.metaKey || e.ctrlKey;
+    if (meta && e.key === 'b') { e.preventDefault(); edApply({ wrap: '**|**' }); }
+    if (meta && e.key === 'i') { e.preventDefault(); edApply({ wrap: '*|*' }); }
+    if (meta && e.key === 'k') { e.preventDefault(); edApply({ link: 1 }); }
+    if (meta && e.key === 'Enter') { e.preventDefault(); closeEditor(); }
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && edKey) closeEditor(); });
+}
+
+/* ── data actions (now on the notebook page) ───────────────────────── */
+
+/** These controls live at the bottom of the notebook, so they're re-wired
+ *  each time that view renders. */
+function wireDataActions() {
+  const ex = $('#btn-export'); if (!ex) return;
+  ex.onclick = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `meridian-${new Date().toISOString().slice(0, 10)}.json`;
     a.click(); URL.revokeObjectURL(a.href);
   };
   $('#import-file').onchange = async e => {
@@ -858,8 +1000,8 @@ function wireSettings() {
     } catch (err) { toast('bad file: ' + err.message, true); }
   };
   $('#btn-reset').onclick = () => {
-    if (!confirm('Wipe all checkboxes, notes and time logs in this browser?')) return;
-    state = blank(); saveState({ sync: false }); render(); toast('reset');
+    if (!confirm('Wipe all checkboxes, notes and time logs in this browser?\n\nIf you are signed in, this also syncs the wipe to your other devices.')) return;
+    state = blank(); saveState(); render(); toast('reset');
   };
 }
 
@@ -967,10 +1109,11 @@ async function boot() {
   $('#sub').textContent = `${m.subtitle} · ${m.startDate} → ${m.endDate} · target ${m.weeklyTargetHours}h/wk`;
   document.title = `${m.title} · W${todayWeek().n}`;
 
-  wireSettings();
+  wireEditor();
+  renderAccount();
   // Firebase is a module, so it may resolve before or after this runs
-  if (window.FB) initSync(); else window.addEventListener('fb-ready', initSync, { once: true });
-  $('#btn-sync').onclick  = () => syncOn() ? pull() : openSettings();
+  if (window.FB) initSync();
+  else window.addEventListener('fb-ready', () => { renderAccount(); initSync(); }, { once: true });
   $('#btn-jump').onclick  = () => select(todayWeek().id);
   // toggle: open the notebook, or click again to go back to where you were
   $('#btn-notes').onclick = () => select(current === 'notes' ? (lastWeek || todayWeek().id) : 'notes');
