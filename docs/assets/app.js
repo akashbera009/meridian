@@ -309,12 +309,85 @@ function renderDays(w, today) {
     ${ts.map(t => taskRow(w, t)).join('')}`).join('');
 }
 
+/** A read-only code lab bound to a task: your own files, tabbed, collapsed
+ *  by default and capped at 70vh so it never swallows the week. Deliberately
+ *  NOT blue — blue means "you wrote this note"; a lab is reference. */
+function renderLab(lab) {
+  const open = localStorage.getItem('mrd.lab.' + lab.id) === '1';
+  const i = Math.min(+(localStorage.getItem('mrd.labtab.' + lab.id) || 0), lab.tabs.length - 1);
+  const tab = lab.tabs[i];
+  return `
+  <div class="lab${open ? ' open' : ''}" data-lab="${esc(lab.id)}">
+    <div class="lab-hd">
+      <span class="lab-tag">lab</span>
+      <span class="lab-title">${esc(lab.title)}</span>
+      <span class="lab-meta">read-only</span>
+      <button class="lab-toggle">${open ? '▾ collapse' : `▸ open ${lab.tabs.length} files`}</button>
+    </div>
+    <div class="lab-body">
+      ${lab.note ? `<p class="lab-intro">${esc(lab.note)}</p>` : ''}
+      <div class="lab-tabs">
+        ${lab.tabs.map((t, n) => `<button class="lab-tab${n === i ? ' on' : ''}" data-i="${n}">
+          ${esc(t.name)}<span class="lab-file">${esc(t.file)}</span></button>`).join('')}
+      </div>
+      <div class="lab-pane">${labPane(tab)}</div>
+    </div>
+  </div>`;
+}
+
+const labPane = tab => `
+  ${tab.note ? `<p class="lab-note">${esc(tab.note)}</p>` : ''}
+  <div class="code lab-code">
+    <div class="code-hd"><span>${esc(tab.file)}</span>
+      <button class="btn btn-sm lab-copy">copy</button></div>
+    <pre><code>${hl(tab.body, tab.lang)}</code></pre>
+  </div>`;
+
+/** Toggle, tab-switch and copy. Tabs swap the pane in place rather than
+ *  re-rendering the week, so your scroll position survives. */
+function wireLabs(w) {
+  $$('.lab').forEach(el => {
+    const id = el.dataset.lab;
+    const lab = (w.labs || []).find(l => l.id === id);
+    if (!lab) return;
+
+    const copy = () => {
+      const c = el.querySelector('.lab-copy');
+      if (!c) return;
+      c.onclick = async () => {
+        const n = +(localStorage.getItem('mrd.labtab.' + id) || 0);
+        await navigator.clipboard.writeText(lab.tabs[Math.min(n, lab.tabs.length - 1)].body);
+        c.textContent = 'copied'; setTimeout(() => c.textContent = 'copy', 1200);
+      };
+    };
+    copy();
+
+    const tog = el.querySelector('.lab-toggle');
+    // the whole header is the hit target, not just the small button
+    el.querySelector('.lab-hd').onclick = () => {
+      const open = el.classList.toggle('open');
+      localStorage.setItem('mrd.lab.' + id, open ? '1' : '0');
+      tog.textContent = open ? '▾ collapse' : `▸ open ${lab.tabs.length} files`;
+    };
+
+    el.querySelectorAll('.lab-tab').forEach(b => b.onclick = () => {
+      const n = +b.dataset.i;
+      localStorage.setItem('mrd.labtab.' + id, n);
+      el.querySelectorAll('.lab-tab').forEach(x => x.classList.toggle('on', x === b));
+      el.querySelector('.lab-pane').innerHTML = labPane(lab.tabs[n]);
+      el.querySelector('.lab-body').scrollTop = 0;
+      copy();
+    });
+  });
+}
+
 /** One task, plus the resources bound to it and its own note box. */
 function taskRow(w, t) {
   const done = getVal('tasks', t.id, false);
   const note = getVal('notes', t.id, '');
   const res  = (w.resources || []).filter(r => r.task === t.id);
   const noted = !!note.trim();
+  const labs = (w.labs || []).filter(l => l.task === t.id);
   return `
   <div class="task ${done ? 'done' : ''}${noted ? ' noted' : ''}" data-tid="${t.id}">
     <input type="checkbox" id="${t.id}" ${done ? 'checked' : ''}>
@@ -323,7 +396,7 @@ function taskRow(w, t) {
     <button class="notebtn${note ? ' has' : ''}" data-note="${t.id}"
             title="${note ? 'edit note' : 'add note'}">✎</button>
   </div>
-  <div class="task-sub${noted ? ' noted' : ''}${res.length || note ? '' : ' bare'}" data-subfor="${t.id}">
+  <div class="task-sub${noted ? ' noted' : ''}${res.length || note || labs.length ? '' : ' bare'}" data-subfor="${t.id}">
     ${res.map(r => {
       const read = r.role === 'primary';
       return `<div class="task-res">
@@ -334,6 +407,7 @@ function taskRow(w, t) {
         <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a>
       </div>`;
     }).join('')}
+    ${labs.map(renderLab).join('')}
     <div class="note-wrap${note ? '' : ' hidden'}" data-notefor="${t.id}">
       <textarea class="tnote" data-tid="${t.id}" spellcheck="false"
         placeholder="what broke · the number you got · what you'd do differently">${esc(note)}</textarea>
@@ -662,6 +736,8 @@ function wireWeek(w) {
     b.textContent = 'copied'; setTimeout(() => b.textContent = 'copy', 1200);
   });
 
+  wireLabs(w);
+
   $$('.expand').forEach(b => b.onclick = () =>
     openEditor(b.dataset.key, b.dataset.t, () => renderWeek(w)));
 
@@ -859,6 +935,9 @@ function renderAccount() {
   const b = $('#btn-account'); if (!b) return;
   const u = window.FB?.user();
   if (u) {
+    // show who, without putting a full email in the header
+    const who = (u.email || '').split('@')[0] || u.displayName || u.uid.slice(0, 6);
+    setSync('synced ' + who);
     b.title = `Synced as ${u.email || u.uid} — click to sign out`;
     b.onclick = async () => {
       if (!confirm(`Signed in as ${u.email || u.uid}.\n\nSign out? This browser keeps its own copy.`)) return;
@@ -871,8 +950,8 @@ function renderAccount() {
       if (!window.FB) return toast('still loading — try again in a second', true);
       try { await window.FB.signIn(); } catch (e) { toast(explain(e), true); }
     };
+    setSync('local');
   }
-  setSync(u ? 'synced' : 'local');
 }
 
 /* ── markdown ──────────────────────────────────────────────────────── */

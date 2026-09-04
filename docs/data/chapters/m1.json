@@ -111,7 +111,38 @@
         }
       ],
       "deliverable": "A benchmark script showing sequential vs concurrent wall time for 50 calls. Screenshot the numbers — you will quote them in an interview.",
-      "checkpoint": "Why does `time.sleep(1)` inside an async function destroy your throughput, but `await asyncio.sleep(1)` does not?"
+      "checkpoint": "Why does `time.sleep(1)` inside an async function destroy your throughput, but `await asyncio.sleep(1)` does not?",
+      "labs": [
+        {
+          "id": "w01.lab.asyncio",
+          "task": "w01.1",
+          "title": "asyncio — the three files you wrote",
+          "note": "Your own code, kept read-only. This is the reference you come back to in Week 4 when the tool loop needs to fire calls concurrently.",
+          "tabs": [
+            {
+              "name": "TaskGroup",
+              "file": "coroutinesio.py",
+              "lang": "python",
+              "note": "Three ways to run coroutines concurrently — and why only one of them fails safely. create_task orphans siblings on error; gather propagates but leaves them running; TaskGroup cancels the group and raises an ExceptionGroup. Structured concurrency.",
+              "body": "import asyncio\n\nasync def fetch_data(name, delay):\n    print(f\"Starting task {name}\")\n    await asyncio.sleep(delay)\n    print(f\"Finished task {name}\")\n    return f\"Result of task {name}\"\n\n\nasync def main():\n    # we can start run each task concurrently via \n    # 1. first approach -> \n    # task1 = asyncio.create_task(fetch_data(\"Task 1\", 1))\n    # task2 = asyncio.create_task(fetch_data(\"Task 2\", 2))\n    # task3 = asyncio.create_task(fetch_data(\"Task 3\", 3))\n\n    # 2. second approach -> [gather]\n    # result = await asyncio.gather(fetch_data(\"Task 1\", 1), fetch_data(\"Task 2\", 2), fetch_data(\"Task 3\", 3))\n    # print(result)\n\n    #3rd approad [Task group]\n    tasks =[]\n    async with asyncio.TaskGroup() as tg:\n        for i , sleep_time in enumerate([1, 2, 3], start  = 1 ):\n            task = tg.create_task(fetch_data(i, sleep_time))\n            tasks.append(task)\n\n    results = [task.result() for task in tasks]\n    print(results)\n\n# Approach 1 (asyncio.create_task manually): if task2 raises an exception, nothing automatically cancels task1/task3 or even surfaces the error unless you explicitly await each task and check. Tasks can fail silently — you might never notice unless you happen to await them.\n# Approach 2 (asyncio.gather): better, since it does propagate the first exception raised. But by default it does not cancel the other still-running tasks when one fails — they keep running in the background orphaned, unless you pass return_exceptions=True and handle it yourself, which is easy to forget.\n# Approach 3 (TaskGroup): if any task inside the group raises, it automatically cancels all the other sibling tasks, waits for them to finish cancelling, and then raises an ExceptionGroup containing everything that failed. It's structured concurrency — no dangling tasks, no silent failures. This is the same idea Trio pioneered and Python later adopted natively.\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n"
+            },
+            {
+              "name": "Lock",
+              "file": "coroutines_lock.py",
+              "lang": "python",
+              "note": "asyncio.Lock serialises a critical section: five tasks want the shared counter, exactly one gets it at a time. Async code is single-threaded but still interleaves at every await — which is where races appear.",
+              "body": "import asyncio\n\n# A shared lock \nshared_resource = 0\n\n# A async lock \nlock = asyncio.Lock()\n\n\n# idea is that 5 tasks want to modify the shared_resource at the same time \n# but there will be a lock , so that only 1 task at a time can modify the resource \nasync def modify_shared_lock():\n    global shared_resource\n    async with lock :\n        #enterine  \n        print('Entering criticle section :[resource before modifiction]' , shared_resource)\n        await asyncio.sleep(1)\n        shared_resource += 1 \n        print('Exit criticle section :[resource after modifiction]' , shared_resource)\n\n\nasync def main ():\n    await asyncio.gather(*[modify_shared_lock() for i in range(5)])\n\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n"
+            },
+            {
+              "name": "Semaphore",
+              "file": "coroutine_semaphore.py",
+              "lang": "python",
+              "note": "A Lock of size N. This is the rate limiter you will use against every LLM provider — Semaphore(5) means five requests in flight, the rest queue. Week 1's build task is exactly this.",
+              "body": "# A semaphore is a concurrency-control mechanism that limits how many tasks can access something at the same time.\nimport asyncio\n\nasync def access_resource(semaphore, resource_id):\n    async with semaphore:\n        # simulate accessing a limited resource \n        print('accessing resource' , resource_id)\n        await asyncio.sleep(1)\n        print('exiting resource' , resource_id)\n\nasync def main():\n    semaphore = asyncio.Semaphore(2) # allow 2 concurrent accesses to the resource at a time \n    tasks = [access_resource(semaphore, i) for i in range(5)]\n    await asyncio.gather(*tasks)\n\nif __name__ == '__main__':\n    asyncio.run(main())\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "w02",
