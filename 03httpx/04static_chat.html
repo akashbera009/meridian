@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Streaming chat demo</title>
+</head>
+
+<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
+  <h3>Streaming chat demo</h3>
+  <input id="prompt" style="width: 100%; padding: 8px;" placeholder="Ask something..." />
+  <button id="send" style="margin-top: 8px;">Send</button>
+  <pre id="output" style="white-space: pre-wrap; margin-top: 16px; min-height: 100px;"></pre>
+
+  <script>
+    const sendBtn = document.getElementById("send");
+    const promptInput = document.getElementById("prompt");
+    const output = document.getElementById("output");
+
+    sendBtn.onclick = async () => {
+      output.textContent = "";
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: promptInput.value }),
+      });
+
+      // response.body is a ReadableStream — the browser-side equivalent
+      // of httpx's response.aiter_lines(). We read raw byte chunks as
+      // they arrive over the wire, decode them, and append to the page.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        output.textContent += decoder.decode(value, { stream: true });
+      }
+    };
+  </script>
+</body>
+
+</html>
+
+<!-- how to run  -->
+<!-- uv run uvicorn 04chat_server:app --port 8001 -->
