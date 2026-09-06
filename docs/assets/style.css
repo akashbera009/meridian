@@ -500,3 +500,76 @@ mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
   .task .h{display:none}
   .code pre{font-size:11.5px}
 }
+
+/* ── bench: measured results under the deliverable ──────────────── */
+/* amber = something you measured. green is reference, blue is your prose. */
+.bench{border:1px solid var(--line2); background:var(--panel); margin:10px 0}
+.bench:not(.open){border-color:#4a3a12}
+.bench:not(.open) .bench-hd{border-left:2px solid var(--amber)}
+.bench-hd{
+  display:flex; gap:10px; align-items:center; padding:8px 10px;
+  background:var(--panel2); cursor:pointer; flex-wrap:wrap;
+}
+.bench-hd:hover{background:#182026}
+.bench-tag{
+  color:var(--amber); border:1px solid #4a3a12; background:#1a1408;
+  font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; padding:1px 6px; flex:none;
+}
+.bench-title{font-size:12px; color:var(--fg); flex:1 1 200px}
+.bench-toggle{
+  background:#1a1408; border:1px solid var(--amber); color:var(--amber);
+  cursor:pointer; font-family:var(--mono); font-size:11.5px; font-weight:500;
+  padding:4px 12px; letter-spacing:.04em; white-space:nowrap; flex:none;
+}
+.bench-toggle:hover{background:var(--amber); color:#0b0e0f}
+.bench.open .bench-toggle{background:none; border-color:var(--line2); color:var(--dim)}
+.bench.open .bench-hd:hover .bench-toggle{border-color:var(--amber); color:var(--amber)}
+
+.bench-body{display:none; padding:0 10px 10px}
+.bench.open .bench-body{display:block}
+.bench-intro{color:var(--dim); font-size:11.5px; margin:9px 0 8px; line-height:1.6}
+
+/* the table scrolls inside itself — the page never scrolls sideways */
+.bench-scroll{overflow-x:auto; margin:8px 0}
+.bench-tbl{border-collapse:collapse; font-size:11.5px; min-width:100%}
+.bench-tbl th,.bench-tbl td{
+  border:1px solid var(--line2); padding:5px 10px; text-align:right; white-space:nowrap;
+}
+.bench-tbl thead th{
+  background:var(--panel2); color:var(--dim); font-weight:500;
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+}
+.bench-tbl tbody th{
+  text-align:left; color:var(--fg); font-weight:400; background:var(--panel2);
+}
+.bn-hint{display:block; font-size:9.5px; color:var(--dimmer); letter-spacing:.02em}
+.bench-tbl td{color:var(--dim); font-variant-numeric:tabular-nums}
+.bn-win{color:var(--amber)}
+.bench-verdict{
+  color:var(--fg); font-size:11.5px; line-height:1.65; margin:10px 0 2px;
+  border-left:2px solid var(--amber); padding-left:10px;
+}
+.bench-note{
+  width:100%; min-height:70px; resize:vertical; background:#0b1116;
+  border:1px solid var(--line2); color:var(--fg);
+  font-family:var(--mono); font-size:12px; line-height:1.6; padding:8px 10px;
+}
+.bench-note:focus{outline:none; border-color:var(--amber)}
+
+/* raw per-call rows: first 10 by default, the rest on request */
+.bench-raw{border-top:1px solid var(--line2); margin-top:12px; padding-top:10px}
+.bench-rawhd{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim);
+}
+.bench-rawtog{
+  background:none; border:1px solid var(--line2); color:var(--dim); cursor:pointer;
+  font-family:var(--mono); font-size:11px; padding:3px 10px;
+  letter-spacing:.04em; text-transform:none; white-space:nowrap;
+}
+.bench-rawtog:hover{border-color:var(--amber); color:var(--amber)}
+.bench-rawtbl{font-size:11px}
+.bench-rawtbl tbody th{color:var(--dimmer); font-size:10.5px; text-align:right}
+.bench-rawtbl td{font-variant-numeric:tabular-nums}
+.bench-raw .bn-more{display:none}
+.bench-raw.all .bn-more{display:table-row}

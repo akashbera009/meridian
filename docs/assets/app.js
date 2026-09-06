@@ -343,6 +343,66 @@ const labPane = tab => `
     <pre><code>${hl(tab.body, tab.lang)}</code></pre>
   </div>`;
 
+/** A measured-results table sitting under the deliverable: the numbers you
+ *  actually got, so the week ends in evidence rather than a screenshot you
+ *  cannot attach. Collapsed by default; the rows are fixed, the reading is
+ *  yours to write. */
+function renderBench(w) {
+  const b = w.bench;
+  if (!b) return '';
+  const key  = w.id + '.bench';
+  const note = getVal('notes', key, b.reading || '');
+  const open = localStorage.getItem('mrd.bench.' + w.id) === '1';
+  const cell = (v, best) =>
+    `<td class="${best ? 'bn-win' : ''}">${esc(v == null ? '—' : String(v))}</td>`;
+
+  return `
+  <div class="bench${open ? ' open' : ''}" data-bench="${esc(w.id)}">
+    <div class="bench-hd">
+      <span class="bench-tag">data</span>
+      <span class="bench-title">${esc(b.title || 'see comparison')}</span>
+      <button class="bench-toggle">${open ? '▾ hide' : '▸ see comparison'}</button>
+    </div>
+    <div class="bench-body">
+      ${b.note ? `<p class="bench-intro">${esc(b.note)}</p>` : ''}
+      <div class="bench-scroll">
+      <table class="bench-tbl">
+        <thead><tr><th>${esc(b.metricLabel || 'metric')}</th>
+          ${b.cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${b.rows.map(r => `<tr>
+            <th>${esc(r.m)}${r.hint ? `<span class="bn-hint">${esc(r.hint)}</span>` : ''}</th>
+            ${r.v.map((v, i) => cell(v, r.best === i)).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      ${b.raw ? `
+      <div class="bench-raw">
+        <div class="bench-rawhd">
+          <span>${esc(b.raw.title || 'raw · every call')}</span>
+          <button class="btn btn-sm bench-rawtog">▸ show all ${b.raw.rows.length}</button>
+        </div>
+        ${b.raw.note ? `<p class="bench-intro">${esc(b.raw.note)}</p>` : ''}
+        <div class="bench-scroll">
+        <table class="bench-tbl bench-rawtbl">
+          <thead><tr><th>#</th>${b.raw.cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${b.raw.rows.map((r, i) => `<tr class="${i >= 10 ? 'bn-more' : ''}">
+              <th>${i + 1}</th>${r.map(v => `<td>${esc(v == null ? '—' : String(v))}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>` : ''}
+      ${b.verdict ? `<p class="bench-verdict">${esc(b.verdict)}</p>` : ''}
+      <div class="ans-hd"><span>WHAT THE NUMBERS MEAN · your reading</span><span>autosaved</span></div>
+      <textarea class="bench-note${note.trim() ? ' hasnote' : ''}" data-benchnote="${esc(key)}"
+        spellcheck="false" placeholder="why did it come out this way? what would you change?">${esc(note)}</textarea>
+    </div>
+  </div>`;
+}
+
 /** Toggle, tab-switch and copy. Tabs swap the pane in place rather than
  *  re-rendering the week, so your scroll position survives. */
 function wireLabs(w) {
@@ -458,6 +518,7 @@ function renderWeek(w) {
     <input id="ship" placeholder="link to what you shipped — repo, commit, screenshot, live URL"
            value="${esc(getVal('notes', w.id + '.ship', ''))}">
     <span class="ship-link" id="ship-link"></span></div>` : ''}
+  ${renderBench(w)}
   ${w.checkpoint ? `<div class="check">${esc(w.checkpoint)}
     <div class="ans-hd"><span>YOUR ANSWER · resurfaces in the tonight strip</span><span>autosaved</span></div>
     <textarea id="answer" spellcheck="false" class="${getVal('notes', w.id + '.check', '').trim() ? 'hasnote' : ''}"
@@ -748,6 +809,31 @@ function wireWeek(w) {
   wireField($('#ship'), w.id + '.ship', () => renderShipLink(w));
   wireField($('#answer'), w.id + '.check', () => refreshNoteMarkers(w));
   renderShipLink(w);
+
+  // benchmark table: collapse state is local-only, the reading syncs like a note
+  const bench = $('.bench');
+  if (bench) {
+    const tog = bench.querySelector('.bench-toggle');
+    bench.querySelector('.bench-hd').onclick = () => {
+      const on = bench.classList.toggle('open');
+      localStorage.setItem('mrd.bench.' + w.id, on ? '1' : '0');
+      tog.textContent = on ? '▾ hide' : '▸ see comparison';
+    };
+    // raw rows past the first 10 stay folded until asked for
+    const raw = bench.querySelector('.bench-raw');
+    if (raw) {
+      const rt = raw.querySelector('.bench-rawtog');
+      const n  = raw.querySelectorAll('.bn-more').length;
+      rt.onclick = e => {
+        e.stopPropagation();            // don't collapse the whole block
+        const on = raw.classList.toggle('all');
+        rt.textContent = on ? '▾ show first 10' : `▸ show all ${n + 10}`;
+      };
+    }
+
+    const bn = bench.querySelector('.bench-note');
+    if (bn) wireField(bn, bn.dataset.benchnote, () => refreshNoteMarkers(w));
+  }
 
   $('#btn-add-log').onclick = () => {
     const m = parseInt($('#man-mins').value, 10);
