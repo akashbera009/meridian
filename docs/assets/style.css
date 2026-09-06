@@ -20,7 +20,11 @@
 }
 
 *{box-sizing:border-box; min-width:0}
-html,body{margin:0;padding:0; overflow-x:hidden}
+html,body{margin:0;padding:0}
+/* overflow-x:hidden makes html/body a scroll container, which silently kills
+   position:sticky for everything inside — so it is scoped to the narrow
+   widths that actually needed the horizontal clamp. Wide screens keep sticky. */
+@media(max-width:1199px){html,body{overflow-x:hidden}}
 body{
   background:var(--bg); color:var(--fg);
   font-family:var(--mono); font-size:13px; line-height:1.65;
@@ -573,3 +577,35 @@ mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
 .bench-rawtbl td{font-variant-numeric:tabular-nums}
 .bench-raw .bn-more{display:none}
 .bench-raw.all .bn-more{display:table-row}
+
+/* ── right rail: the docked timer ───────────────────────────────── */
+/* Empty and zero-width until the timer is moved in, so the pane keeps
+   its full measure on narrower screens. */
+#rail{width:0; flex:0 0 0}
+.timer-man{display:flex; gap:8px; align-items:center}
+
+@media(min-width:1200px){
+  /* body is the scroll container (it has overflow-y:auto), so the sticky
+     card is measured against #rail. The rail must therefore NOT stretch to
+     full page height — align-self:flex-start keeps it card-sized, and the
+     card then pins under the 78px header instead of scrolling away. */
+  #rail{
+    width:250px; flex:0 0 250px; padding:18px 16px 40px;
+    align-self:flex-start; border-left:1px solid var(--line);
+    position:sticky; top:78px;
+    max-height:calc(100vh - 78px); overflow-y:auto;
+  }
+  #rail:empty{border-left:none}
+  #main{max-width:1000px}
+
+  /* docked: one column, so it reads as a panel rather than a toolbar */
+  #timecard.docked{background:var(--panel); border:1px solid var(--line2); padding:10px 12px}
+  #timecard.docked h3{margin-top:0}
+  #timecard.docked .timer{flex-direction:column; align-items:stretch; gap:7px}
+  #timecard.docked .clock{font-size:26px; text-align:center; min-width:0; padding:2px 0}
+  #timecard.docked .timer > .btn{width:100%; padding:7px}
+  #timecard.docked .timer-man{display:flex}
+  #timecard.docked .timer-man input[type=number]{flex:1; min-width:0}
+  #timecard.docked .logs{max-height:190px; overflow-y:auto}
+  #timecard.docked .logrow{font-size:11px}
+}

@@ -541,16 +541,20 @@ function renderWeek(w) {
       <pre><code>${hl(c.body, c.lang)}</code></pre>
     </div>`).join('')}` : ''}
 
-  <h3>time log · ${fmtH(minsFor(w.id))} of ${w.hours}h</h3>
-  <div class="timer">
-    <span class="clock" data-clock="${w.id}">00:00:00</span>
-    <button class="btn" data-timerbtn="${w.id}">start</button>
-    <input type="number" id="man-mins" min="-900" max="900" step="5" placeholder="±min">
-    <button class="btn" id="btn-add-log">log</button>
-    <span class="dim small">negative subtracts — use it to correct an over-log</span>
+  <div id="timecard">
+    <h3>time log · <span id="tl-sum">${fmtH(minsFor(w.id))} of ${w.hours}h</span></h3>
+    <div class="timer">
+      <span class="clock" data-clock="${w.id}">00:00:00</span>
+      <button class="btn" data-timerbtn="${w.id}">start</button>
+      <div class="timer-man">
+        <input type="number" id="man-mins" min="-900" max="900" step="5" placeholder="±min">
+        <button class="btn" id="btn-add-log">log</button>
+      </div>
+      <span class="dim small">negative subtracts — use it to correct an over-log</span>
+    </div>
+    <div class="hbar"><i id="hbar" style="width:0"></i></div>
+    <div class="logs" id="logs"></div>
   </div>
-  <div class="hbar"><i id="hbar" style="width:0"></i></div>
-  <div class="logs" id="logs"></div>
 
   <h3 id="notes-h3">notes${noteCount(w) ? ` · <span class="nmark">✎ ${noteCount(w)}</span> in this week` : ''}</h3>
   <div class="notes-hd">
@@ -569,9 +573,46 @@ function renderWeek(w) {
   </div>
 </div>`;
 
+  // the docked card lives outside #pane, so replacing the pane alone would
+  // leave the previous week's timer (and its clock) stranded in the rail
+  clearRail();
   $('#pane').innerHTML = html;
   wireWeek(w);
+  dockTimer();
 }
+
+/* ── timer docking ──────────────────────────────────────────────────
+   The timer is the one control you reach for mid-session, so on a wide
+   screen it moves into the right rail and stays put while you scroll
+   the week. Narrow screens keep it inline, where the pane already
+   reads top-to-bottom. Moving the node (rather than rendering twice)
+   keeps the running clock and its listeners intact. */
+const WIDE = window.matchMedia('(min-width:1200px)');
+
+/** Views without a timer (the notebook, the load error) must empty the rail
+ *  themselves — the timecard lives outside #pane when docked, so replacing
+ *  the pane alone would strand a stale week's clock on screen. */
+const clearRail = () => { const r = $('#rail'); if (r) r.innerHTML = ''; };
+
+function dockTimer() {
+  const card = $('#timecard'), rail = $('#rail'), pane = $('#pane');
+  if (!card || !rail || !pane) return;
+  const wide = WIDE.matches;
+  if (wide) {
+    if (card.parentElement !== rail) rail.appendChild(card);
+  } else {
+    // back to its inline slot: just before the notes heading. That heading
+    // sits inside .pane, not #pane, so insert relative to its real parent.
+    const anchor = pane.querySelector('#notes-h3');
+    const host = anchor ? anchor.parentElement : (pane.querySelector('.pane') || pane);
+    if (card.parentElement !== host) {
+      anchor ? host.insertBefore(card, anchor) : host.appendChild(card);
+    }
+  }
+  card.classList.toggle('docked', wide);
+}
+
+WIDE.addEventListener('change', dockTimer);
 
 /* ── tonight strip ──────────────────────────────────────────────────── */
 
@@ -674,6 +715,7 @@ function renderNotes() {
   }
   const n = rows.reduce((s, r) => s + r.items.length, 0);
 
+  clearRail();
   $('#pane').innerHTML = `
 <div class="pane">
   <div class="rule">${'─'.repeat(120)}</div>
@@ -912,8 +954,8 @@ function renderLogs(w) {
     const h = $('#hbar'); if (h) sizeBar(w);
   });
   sizeBar(w);
-  const hd = box.previousElementSibling?.previousElementSibling?.previousElementSibling;
-  if (hd && hd.tagName === 'H3') hd.textContent = `time log · ${fmtH(minsFor(w.id))} of ${w.hours}h`;
+  const sum = $('#tl-sum');
+  if (sum) sum.textContent = `${fmtH(minsFor(w.id))} of ${w.hours}h`;
 }
 
 function sizeBar(w) {
@@ -1286,6 +1328,7 @@ async function boot() {
   try {
     ROADMAP = await loadCurriculum();
   } catch (e) {
+    clearRail();
     $('#pane').innerHTML = `<div class="pane">
       <h1>could not load the curriculum</h1>
       <p class="dim">Opening this file directly with <code>file://</code> blocks fetch. Serve it instead:</p>
