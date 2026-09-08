@@ -164,12 +164,17 @@ header{
 .task.noted{padding-left:6px}
 .task-sub.noted{padding-left:32px}
 
-/* any note field holding content: blue rail + brighter text, so written
-   notes read as content instead of blending into the placeholder grey */
+/* any note field holding content: blue rail + blue text. The old #dbe3e9
+   was a near-white grey one shade off the empty state (#c5cdd3) — the
+   difference was lightness only, which the eye does not register. Hue is
+   what makes it read as "written", and blue is the signal already in use. */
 textarea.hasnote,input.hasnote{
   border-left:2px solid var(--blue) !important;
-  color:#dbe3e9 !important;
-  background:#0b1116 !important;
+  color:#8fbdf5 !important;
+  /* background-color, not background — the shorthand would wipe the
+     scroll-shadow background-image set further down */
+  background-color:#0b1116 !important;
+  --nbg:#0b1116;
 }
 
 /* sidebar / heading marker */
@@ -200,7 +205,7 @@ textarea.hasnote,input.hasnote{
 .note-wrap{margin-top:6px}
 .note-wrap textarea{
   width:100%; min-height:84px; resize:vertical; padding:8px;
-  background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  background-color:#0a0d0e; color:var(--fg); border:1px solid var(--line);
   font-family:var(--mono); font-size:12px; line-height:1.6;
 }
 .note-wrap textarea:focus{outline:none; border-color:var(--amber)}
@@ -250,7 +255,7 @@ textarea.hasnote,input.hasnote{
 /* notes + timer */
 textarea#notes{
   width:100%; min-height:170px; resize:vertical;
-  background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  background-color:#0a0d0e; color:var(--fg); border:1px solid var(--line);
   font-family:var(--mono); font-size:12.5px; line-height:1.65; padding:10px;
 }
 textarea#notes:focus{outline:none; border-color:var(--green)}
@@ -448,7 +453,7 @@ textarea#notes:focus{outline:none; border-color:var(--green)}
 
 /* deliverable link + checkpoint answer */
 .deliv input,.check textarea{
-  width:100%; margin-top:8px; background:#0a0d0e; color:var(--fg); border:1px solid var(--line);
+  width:100%; margin-top:8px; background-color:#0a0d0e; color:var(--fg); border:1px solid var(--line);
   font-family:var(--mono); font-size:12px; padding:6px 8px;
 }
 .deliv input:focus,.check textarea:focus{outline:none; border-color:var(--green)}
@@ -474,7 +479,8 @@ textarea#notes:focus{outline:none; border-color:var(--green)}
 .nb-k{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--dimmer); padding-top:2px}
 .nb-k.answer{color:var(--cyan)} .nb-k.task{color:var(--amber)} .nb-k.week{color:var(--green)}
 .nb-q{color:var(--dim); font-size:11.5px; margin-bottom:3px}
-.nb-v{white-space:pre-wrap; font-size:12px}
+/* the notebook renders the same notes, so it carries the same blue */
+.nb-v{white-space:pre-wrap; font-size:12px; color:#8fbdf5}
 mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
 
 /* milestones */
@@ -554,7 +560,7 @@ mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
   border-left:2px solid var(--amber); padding-left:10px;
 }
 .bench-note{
-  width:100%; min-height:70px; resize:vertical; background:#0b1116;
+  width:100%; min-height:70px; resize:vertical; background-color:#0b1116; --nbg:#0b1116;
   border:1px solid var(--line2); color:var(--fg);
   font-family:var(--mono); font-size:12px; line-height:1.6; padding:8px 10px;
 }
@@ -608,4 +614,57 @@ mark{background:var(--green-d); color:#e8f5ea; padding:0 1px}
   #timecard.docked .timer-man input[type=number]{flex:1; min-width:0}
   #timecard.docked .logs{max-height:190px; overflow-y:auto}
   #timecard.docked .logrow{font-size:11px}
+}
+
+/* ── notes: "there is more below" ───────────────────────────────────
+   macOS uses overlay scrollbars, so a note with more text than fits looked
+   identical to one that ended there — measured: a plain overflowing div
+   reserves 0px, styled or not. Native scrollbars therefore cannot carry
+   this signal, so the indicator is painted instead.
+
+   Two background layers per edge (Lea Verou's scroll-shadow):
+     · a COVER, background-attachment:local, so it travels with the text and
+       sits exactly at the first/last line
+     · a SHADOW, background-attachment:scroll, pinned to the element edge
+   At the top of the content the cover sits over the shadow and hides it;
+   scroll down and the cover moves away, revealing the fade. Net effect: the
+   blue fade is visible only while there is genuinely more text that way. */
+.tnote, textarea#notes, textarea#answer, .bench-note{
+  --nbg:#0a0d0e;                       /* must match the field's own bg */
+  background-image:
+    linear-gradient(var(--nbg) 40%, rgba(0,0,0,0)),
+    linear-gradient(rgba(0,0,0,0), var(--nbg) 60%),
+    linear-gradient(to bottom, rgba(90,157,237,.55), rgba(90,157,237,0)),
+    linear-gradient(to top,    rgba(90,157,237,.55), rgba(90,157,237,0));
+  background-repeat:no-repeat;
+  background-size:100% 28px, 100% 28px, 100% 16px, 100% 16px;
+  background-position:top, bottom, top, bottom;
+  background-attachment:local, local, scroll, scroll;
+}
+
+/* Kept for platforms that still draw a classic scrollbar (Windows, Linux,
+   or macOS set to "always show"). Harmless where bars are overlay. */
+.tnote::-webkit-scrollbar,
+textarea#notes::-webkit-scrollbar,
+textarea#answer::-webkit-scrollbar,
+.bench-note::-webkit-scrollbar{width:10px}
+.tnote::-webkit-scrollbar-track,
+textarea#notes::-webkit-scrollbar-track,
+textarea#answer::-webkit-scrollbar-track,
+.bench-note::-webkit-scrollbar-track{background:#0a0d0e; border-left:1px solid var(--line)}
+.tnote::-webkit-scrollbar-thumb,
+textarea#notes::-webkit-scrollbar-thumb,
+textarea#answer::-webkit-scrollbar-thumb,
+.bench-note::-webkit-scrollbar-thumb{background:#2e4a6e; border:2px solid #0a0d0e}
+.tnote:hover::-webkit-scrollbar-thumb,
+textarea#notes:hover::-webkit-scrollbar-thumb,
+textarea#answer:hover::-webkit-scrollbar-thumb,
+.bench-note:hover::-webkit-scrollbar-thumb{background:var(--blue)}
+
+/* Firefox ignores ::-webkit-scrollbar; this guard never matches Chrome, so
+   the two never fight over which scrollbar model to use. */
+@supports (-moz-appearance:none){
+  .tnote, textarea#notes, textarea#answer, .bench-note{
+    scrollbar-width:thin; scrollbar-color:#2e4a6e #0a0d0e;
+  }
 }

@@ -469,7 +469,7 @@ function taskRow(w, t) {
     }).join('')}
     ${labs.map(renderLab).join('')}
     <div class="note-wrap${note ? '' : ' hidden'}" data-notefor="${t.id}">
-      <textarea class="tnote" data-tid="${t.id}" spellcheck="false"
+      <textarea class="tnote${noted ? ' hasnote' : ''}" data-tid="${t.id}" spellcheck="false"
         placeholder="what broke · the number you got · what you'd do differently">${esc(note)}</textarea>
       <button class="expand sm" data-key="${t.id}" data-t="${esc(wn(w) + ' · ' + t.t.slice(0, 46))}"
               title="Open in the full editor">⤢ expand</button>
@@ -799,6 +799,7 @@ function wireWeek(w) {
       d = setTimeout(() => {
         const id = ta.dataset.tid, has = !!ta.value.trim();
         setVal('notes', id, ta.value);
+        ta.classList.toggle('hasnote', has);
         $(`.notebtn[data-note="${id}"]`)?.classList.toggle('has', has);
         $(`.task[data-tid="${id}"]`)?.classList.toggle('noted', has);
         $(`.task-sub[data-subfor="${id}"]`)?.classList.toggle('noted', has);
