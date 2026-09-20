@@ -713,6 +713,86 @@
           "url": "https://simonwillison.net/tags/llms/",
           "id": "w03.r4",
           "role": "background"
+        },
+        {
+          "type": "doc",
+          "label": "Anthropic — Working with the Messages API. START HERE. Four short sections with runnable examples: basic request/response → multiple conversational turns → system role. That is the whole task.",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/working-with-messages",
+          "id": "w03.r5",
+          "role": "primary",
+          "task": "w03.1"
+        },
+        {
+          "type": "doc",
+          "label": "Anthropic — Messages endpoint reference. Lookup table, not a read. Go to \"Body\" and read four rows only: model, messages, system, max_tokens. Ignore everything else until you need it.",
+          "url": "https://platform.claude.com/docs/en/api/messages",
+          "id": "w03.r14",
+          "role": "reference",
+          "task": "w03.1"
+        },
+        {
+          "type": "doc",
+          "label": "Gemini — multi-turn conversations are stateless. Short section, and it is the whole answer to \"why does cost grow with conversation length\".",
+          "url": "https://ai.google.dev/gemini-api/docs/text-generation#stateless-conversations",
+          "id": "w03.r6",
+          "role": "reference",
+          "task": "w03.1"
+        },
+        {
+          "type": "blog",
+          "label": "Hugging Face — How to generate text. Greedy, beam, top-k, top-p and temperature, with diagrams. The clearest 20 minutes on sampling anywhere.",
+          "url": "https://huggingface.co/blog/how-to-generate",
+          "id": "w03.r7",
+          "role": "primary",
+          "task": "w03.2"
+        },
+        {
+          "type": "doc",
+          "label": "Gemini — GenerationConfig. The same knobs under Google's names (temperature, topP, maxOutputTokens, stopSequences). Skim it to see the mapping, not to memorise.",
+          "url": "https://ai.google.dev/api/generate-content#GenerationConfig",
+          "id": "w03.r8",
+          "role": "reference",
+          "task": "w03.2"
+        },
+        {
+          "type": "doc",
+          "label": "Anthropic — Streaming messages. Event types, input_json_delta for partial JSON, and what a mid-stream error looks like on the wire. All three of your task's problems in one page.",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/streaming",
+          "id": "w03.r9",
+          "role": "primary",
+          "task": "w03.4"
+        },
+        {
+          "type": "doc",
+          "label": "MDN — Using server-sent events. The wire format itself: data: lines, blank-line framing, reconnect. Ten minutes and SSE stops being magic.",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events",
+          "id": "w03.r10",
+          "role": "reference",
+          "task": "w03.4"
+        },
+        {
+          "type": "doc",
+          "label": "Anthropic — Token counting. A free endpoint that prices a prompt before you send it. Do this once and you stop guessing.",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/token-counting",
+          "id": "w03.r11",
+          "role": "primary",
+          "task": "w03.5"
+        },
+        {
+          "type": "doc",
+          "label": "Tiktokenizer — paste text, watch it split. Fastest way to feel why \"cat\" is one token and a UUID is twenty.",
+          "url": "https://tiktokenizer.vercel.app/",
+          "id": "w03.r12",
+          "role": "reference",
+          "task": "w03.5"
+        },
+        {
+          "type": "doc",
+          "label": "OpenRouter — model pricing table. Input vs output $/M side by side for every provider going into llm.py. Sort by price and look at the in/out gap.",
+          "url": "https://openrouter.ai/models",
+          "id": "w03.r13",
+          "role": "reference",
+          "task": "w03.5"
         }
       ],
       "code": [
