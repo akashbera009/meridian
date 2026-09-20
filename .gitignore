@@ -4,6 +4,9 @@ __pycache__/
 .venv/
 .env
 *.log
+# runtime output from the background-tasks / logging exercises, rewritten
+# on every run — the code that writes it is tracked, the output is not
+log.txt
 
 # local git identity for this workspace — machine config, not project content
 .gitconfig
