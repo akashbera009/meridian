@@ -8,3 +8,14 @@ Personal project workspace.
 
 `docs/` is the GitHub Pages source (Settings → Pages → branch `main`, folder `/docs`).
 Future projects live in their own top-level folders here.
+
+
+uv init example-app
+cd example-app
+uv run example-app
+
+uv add fastapi uvicorn httpx
+
+run any fast api app 
+uv run uvicorn 07background_tasks:app --reload
+
